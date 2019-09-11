@@ -16,7 +16,7 @@ namespace NzbWishlist.Azure.Functions
     {
         [FunctionName("Add-Provider")]
         public async Task<IActionResult> AddProviderAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Post, Route = "providers")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, Constants.Post, Route = "provider")] HttpRequest req,
             [Table(Constants.ProviderTableName)] CloudTable table)
         {
             var (model, errors) = await req.GetRequestModel<ProviderViewModel, ProviderValidator>();

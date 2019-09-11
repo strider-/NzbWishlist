@@ -16,7 +16,7 @@ namespace NzbWishlist.Azure.Functions
     {
         [FunctionName("Add-Wish")]
         public async Task<IActionResult> AddWishAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Post, Route = "wishes")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, Constants.Post, Route = "wish")] HttpRequest req,
             [Table(Constants.WishTableName)] CloudTable table)
         {
             var (model, errors) = await req.GetRequestModel<WishViewModel, WishValidator>();
