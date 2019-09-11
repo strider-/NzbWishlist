@@ -24,25 +24,45 @@ namespace NzbWishlist.Azure.Extensions
             }));
         }
 
-        public static Provider ToDomainModel(this ProviderViewModel provider)
+        public static Provider ToDomainModel(this ProviderViewModel provider) => new Provider
         {
-            return new Provider
-            {
-                ApiKey = provider.ApiKey,
-                ApiUrl = provider.ApiUrl,
-                ImageDomain = provider.ImageDomain
-            };
-        }
+            ApiKey = provider.ApiKey,
+            ApiUrl = provider.ApiUrl,
+            ImageDomain = provider.ImageDomain
+        };
 
-        public static ProviderViewModel ToViewModel(this Provider provider)
+        public static ProviderViewModel ToViewModel(this Provider provider) => new ProviderViewModel
         {
-            return new ProviderViewModel
-            {
-                ApiKey = provider.ApiKey,
-                ApiUrl = provider.ApiUrl,
-                ImageDomain = provider.ImageDomain,
-                Id = provider.RowKey
-            };
-        }
+            Id = provider.RowKey,
+            ApiKey = provider.ApiKey,
+            ApiUrl = provider.ApiUrl,
+            ImageDomain = provider.ImageDomain            
+        };
+
+        public static Wish ToDomainModel(this WishViewModel wish) => new Wish
+        {
+            Active = wish.Active,
+            Name = wish.Name,
+            Query = wish.Query,
+        };
+
+        public static WishViewModel ToViewModel(this Wish wish) => new WishViewModel
+        {
+            Id = wish.RowKey,
+            Active = wish.Active,
+            Name = wish.Name,
+            Query = wish.Query,
+        };
+
+        public static WishResultViewModel ToViewModel(this WishResult wishResult) => new WishResultViewModel
+        {
+            DetailsUrl = wishResult.DetailsUrl,
+            Id = wishResult.Id,
+            NzbUrl = wishResult.NzbUrl,
+            PreviewUrl = wishResult.PreviewUrl,
+            PubDate = wishResult.PubDate,
+            Size = wishResult.Size,
+            Title = wishResult.Title
+        };
     }
 }
