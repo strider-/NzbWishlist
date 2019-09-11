@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.29306.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NzbWishlist.Azure", "NzbWishlist\NzbWishlist.Azure.csproj", "{0F92A498-2E59-4F98-9EA4-58C0066F7CC9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NzbWishlist.Core", "NzbWishlist.Core\NzbWishlist.Core.csproj", "{70A4B15C-8FF3-4A65-8D98-13F6B9DD99C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NzbWishlist.Core", "NzbWishlist.Core\NzbWishlist.Core.csproj", "{70A4B15C-8FF3-4A65-8D98-13F6B9DD99C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NzbWishlist.Tests", "NzbWishlist.Tests\NzbWishlist.Tests.csproj", "{F3F09434-3AB0-4D51-9FA9-DA13A22DBA7E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{70A4B15C-8FF3-4A65-8D98-13F6B9DD99C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70A4B15C-8FF3-4A65-8D98-13F6B9DD99C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{70A4B15C-8FF3-4A65-8D98-13F6B9DD99C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3F09434-3AB0-4D51-9FA9-DA13A22DBA7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3F09434-3AB0-4D51-9FA9-DA13A22DBA7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3F09434-3AB0-4D51-9FA9-DA13A22DBA7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3F09434-3AB0-4D51-9FA9-DA13A22DBA7E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
