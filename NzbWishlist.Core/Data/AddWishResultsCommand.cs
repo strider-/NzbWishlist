@@ -20,14 +20,21 @@ namespace NzbWishlist.Core.Data
                 throw new ArgumentException("One or more wish results haven't been assigned to a wish!");
             }
 
-            var batch = new TableBatchOperation();
+            var currentBatch = _results.Take(100);
+            int counter = 1;
 
-            foreach (var result in _results)
+            do
             {
-                batch.Insert(result);
-            }
+                var batch = new TableBatchOperation();
+                foreach (var result in _results)
+                {
+                    batch.Insert(result);
+                }
 
-            await model.ExecuteBatchAsync(batch);
+                await model.ExecuteBatchAsync(batch);
+
+                currentBatch = _results.Skip(100 * counter++).Take(100);
+            } while (currentBatch.Any());
         }
     }
 }

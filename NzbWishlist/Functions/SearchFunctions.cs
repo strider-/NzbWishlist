@@ -53,8 +53,12 @@ namespace NzbWishlist.Azure.Functions
                 results.AddRange(providerResults);
             }
 
-            var command = new AddWishResultsCommand(results);
+            /* 
+             * TODO: Update wish last search date 
+             * TODO: Add pushover notification w/ unique wishes with new results
+             */
 
+            var command = new AddWishResultsCommand(results);
             await command.ExecuteAsync(wishTable);
         }
 
@@ -82,6 +86,8 @@ namespace NzbWishlist.Azure.Functions
         [FunctionName("WishSearch")]
         public async Task<IEnumerable<WishResult>> WishSearchAsync([ActivityTrigger] SearchWishContext context)
         {
+            /* TODO: implement max age based on wish last search date */
+
             return await _client.SearchAsync(context.Provider, context.Wish);
         }
     }
