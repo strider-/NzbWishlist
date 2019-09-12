@@ -30,5 +30,7 @@ namespace NzbWishlist.Core.Models
         public string PreviewUrl { get; set; }
 
         public string NzbUrl { get; set; }
+
+        public string Category { get; set; }
     }
 }
