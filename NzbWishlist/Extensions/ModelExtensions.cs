@@ -41,9 +41,10 @@ namespace NzbWishlist.Azure.Extensions
 
         public static Wish ToDomainModel(this WishViewModel wish) => new Wish
         {
-            Active = wish.Active,
+            Active = wish.Active.HasValue ? wish.Active.Value : true,
             Name = wish.Name,
             Query = wish.Query,
+            LastSearchDate = DateTime.UtcNow.AddDays(-6)
         };
 
         public static WishViewModel ToViewModel(this Wish wish) => new WishViewModel

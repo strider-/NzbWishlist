@@ -6,6 +6,6 @@ namespace NzbWishlist.Core.Services
 {
     public interface INewznabClient
     {
-        Task<IEnumerable<WishResult>> SearchAsync(Provider provider, Wish wish, int maxAgeInDays = 0);
+        Task<IEnumerable<WishResult>> SearchAsync(Provider provider, Wish wish);
     }
 }

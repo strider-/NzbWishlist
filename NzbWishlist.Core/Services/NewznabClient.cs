@@ -13,9 +13,9 @@ namespace NzbWishlist.Core.Services
 
         public NewznabClient() => _client = new HttpClient();
 
-        public async Task<IEnumerable<WishResult>> SearchAsync(Provider provider, Wish wish, int maxAgeInDays = 0)
+        public async Task<IEnumerable<WishResult>> SearchAsync(Provider provider, Wish wish)
         {
-            var searchUrl = $"{provider.ApiUrl.TrimEnd('/')}/api?apikey={provider.ApiKey}&o=json&t=search&q={wish.Query}&maxage={maxAgeInDays}";
+            var searchUrl = $"{provider.ApiUrl.TrimEnd('/')}/api?apikey={provider.ApiKey}&o=json&t=search&q={wish.Query}&maxage={wish.DaysSinceLastSearch()}";
 
             var resp = await _client.GetAsync(searchUrl);
 

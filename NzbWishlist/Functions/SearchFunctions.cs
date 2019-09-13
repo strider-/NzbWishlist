@@ -1,11 +1,13 @@
 ﻿using Microsoft.Azure.WebJobs;
 using Microsoft.WindowsAzure.Storage.Table;
+using NzbWishlist.Azure.Extensions;
 using NzbWishlist.Azure.Models;
 using NzbWishlist.Core.Data;
 using NzbWishlist.Core.Models;
 using NzbWishlist.Core.Services;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +21,7 @@ namespace NzbWishlist.Azure.Functions
 
         [FunctionName("SearchTrigger")]
         public async Task SearchAsync(
-            [TimerTrigger("0 0 */2 * * *", RunOnStartup = true)] TimerInfo timer,
+            [TimerTrigger("0 0 */2 * * *")] TimerInfo timer,
             [Table(Constants.ProviderTableName)] CloudTable providerTable,
             [Table(Constants.WishTableName)] CloudTable wishTable,
             [OrchestrationClient] DurableOrchestrationClientBase client)
@@ -47,19 +49,21 @@ namespace NzbWishlist.Azure.Functions
                 var providerResults = await context.CallSubOrchestratorAsync<IEnumerable<WishResult>>("ProviderOrchestration", new SearchProviderContext
                 {
                     Provider = provider,
-                    Wishes = model.Wishes
+                    Wishes = model.Wishes.Where(w => w.Active)
                 });
 
                 results.AddRange(providerResults);
             }
 
             /* 
-             * TODO: Update wish last search date 
              * TODO: Add pushover notification w/ unique wishes with new results
              */
 
-            var command = new AddWishResultsCommand(results);
-            await command.ExecuteAsync(wishTable);
+            var addResultsCmd = new AddWishResultsCommand(results);
+            await wishTable.ExecuteAsync(addResultsCmd);
+
+            var updateWishesCmd = new UpdateLastSearchDateCommand(model.Wishes);
+            await wishTable.ExecuteAsync(updateWishesCmd);
         }
 
         [FunctionName("ProviderOrchestration")]
@@ -86,8 +90,6 @@ namespace NzbWishlist.Azure.Functions
         [FunctionName("WishSearch")]
         public async Task<IEnumerable<WishResult>> WishSearchAsync([ActivityTrigger] SearchWishContext context)
         {
-            /* TODO: implement max age based on wish last search date */
-
             return await _client.SearchAsync(context.Provider, context.Wish);
         }
     }

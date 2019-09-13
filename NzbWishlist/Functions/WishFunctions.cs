@@ -28,7 +28,7 @@ namespace NzbWishlist.Azure.Functions
             var domainModel = model.ToDomainModel();
             var command = new AddWishCommand(domainModel);
 
-            await command.ExecuteAsync(table);
+            await table.ExecuteAsync(command);
 
             var location = req.CreateLocation("/wishes");
             return new CreatedResult(location, domainModel.ToViewModel());
@@ -41,7 +41,7 @@ namespace NzbWishlist.Azure.Functions
         {
             var query = new GetWishesQuery();
 
-            var wishes = await query.ExecuteAsync(table);
+            var wishes = await table.ExecuteAsync(query);
 
             return new OkObjectResult(wishes.Select(w => w.ToViewModel()));
         }
@@ -54,7 +54,7 @@ namespace NzbWishlist.Azure.Functions
         {
             var query = new GetWishResultsQuery(id);
 
-            var results = await query.ExecuteAsync(table);
+            var results = await table.ExecuteAsync(query);
 
             return new OkObjectResult(results.Select(r => r.ToViewModel()));
         }
@@ -67,7 +67,25 @@ namespace NzbWishlist.Azure.Functions
         {
             var command = new DeleteWishCommand(id);
 
-            await command.ExecuteAsync(table);
+            await table.ExecuteAsync(command);
+
+            return new NoContentResult();
+        }
+
+        [FunctionName("Toggle-Wish")]
+        public async Task<IActionResult> ToggleWishAsync(
+            [HttpTrigger(AuthorizationLevel.Function, Constants.Post, Route = "wishes/toggle")] HttpRequest req,
+            [Table(Constants.WishTableName)] CloudTable table)
+        {
+            var (model, errors) = await req.GetRequestModel<ToggleWishViewModel, ToggleWishValidator>();
+            if (model == null)
+            {
+                return errors.ToBadRequest();
+            }
+
+            var command = new ToggleWishCommand(model.WishId, model.Active.Value);
+
+            await table.ExecuteAsync(command);
 
             return new NoContentResult();
         }

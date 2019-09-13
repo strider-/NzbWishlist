@@ -28,7 +28,7 @@ namespace NzbWishlist.Azure.Functions
             var domainModel = model.ToDomainModel();
             var command = new AddProviderCommand(domainModel);
 
-            await command.ExecuteAsync(table);
+            await table.ExecuteAsync(command);
 
             var location = req.CreateLocation("/providers");
             return new CreatedResult(location, domainModel.ToViewModel());
@@ -41,7 +41,7 @@ namespace NzbWishlist.Azure.Functions
         {
             var query = new GetProvidersQuery();
 
-            var providers = await query.ExecuteAsync(table);
+            var providers = await table.ExecuteAsync(query);
 
             return new OkObjectResult(providers.Select(p => p.ToViewModel()));
         }
@@ -54,7 +54,7 @@ namespace NzbWishlist.Azure.Functions
         {
             var command = new DeleteProviderCommand(id);
 
-            await command.ExecuteAsync(table);
+            await table.ExecuteAsync(command);
 
             return new NoContentResult();
         }

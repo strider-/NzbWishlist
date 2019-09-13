@@ -2,13 +2,14 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NzbWishlist.Core.Models
 {
     class SearchResults
     {
         [JsonProperty("item")]
-        public IEnumerable<Result> Items { get; set; }
+        public IEnumerable<Result> Items { get; set; } = Enumerable.Empty<Result>();
     }
 
     class Result

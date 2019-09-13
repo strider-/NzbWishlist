@@ -15,6 +15,11 @@ namespace NzbWishlist.Core.Data
 
         public async Task ExecuteAsync(CloudTable model)
         {
+            if (!_results.Any())
+            {
+                return; // Nothin to do!
+            }
+
             if (_results.Any(r => r.RowKey == null))
             {
                 throw new ArgumentException("One or more wish results haven't been assigned to a wish!");
