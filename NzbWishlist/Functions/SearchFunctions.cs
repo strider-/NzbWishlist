@@ -29,12 +29,16 @@ namespace NzbWishlist.Azure.Functions
         {
             var providers = await providerTable.ExecuteAsync(new GetProvidersQuery());
             var wishes = await wishTable.ExecuteAsync(new GetWishesQuery());
+            var activeWishes = wishes.Where(w => w.Active);
 
-            await client.StartNewAsync("SearchOrchestration", new SearchContext
+            if (activeWishes.Any())
             {
-                Providers = providers,
-                Wishes = wishes.Where(w => w.Active)
-            });
+                await client.StartNewAsync("SearchOrchestration", new SearchContext
+                {
+                    Providers = providers,
+                    Wishes = activeWishes
+                });
+            }
         }
 
         [FunctionName("SearchOrchestration")]
