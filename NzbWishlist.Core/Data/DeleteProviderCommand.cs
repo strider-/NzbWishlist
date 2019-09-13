@@ -13,7 +13,7 @@ namespace NzbWishlist.Core.Data
         public async Task ExecuteAsync(CloudTable model)
         {
             var op = TableOperation.Delete(new Provider { RowKey = _providerId, ETag = "*" });
-
+            
             await model.ExecuteAsync(op);
         }
     }

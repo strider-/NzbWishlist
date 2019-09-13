@@ -10,5 +10,21 @@ namespace NzbWishlist.Tests.Fixtures
         {
 
         }
+
+        public void SetupOperation(ITableEntity entity, TableOperationType operation)
+        {
+            Setup(t => t.ExecuteAsync(It.Is<TableOperation>(op => op.OperationType == operation && op.Entity.RowKey == entity.RowKey)))
+                .ReturnsAsync(new TableResult
+                {
+                    Etag = "new!",
+                    HttpStatusCode = 200,
+                    Result = entity
+                });
+        }
+
+        public void VerifyOperation(ITableEntity entity, TableOperationType operation)
+        {
+            Verify(t => t.ExecuteAsync(It.Is<TableOperation>(op => op.OperationType == operation && op.Entity.RowKey == entity.RowKey)), Times.Once());
+        }
     }
 }

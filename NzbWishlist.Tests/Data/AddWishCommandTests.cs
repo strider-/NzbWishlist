@@ -7,21 +7,21 @@ using Xunit;
 
 namespace NzbWishlist.Tests.Data
 {
-    [Trait(nameof(Data), nameof(AddProviderCommand))]
-    public class AddProviderCommandTests
+    [Trait(nameof(Data), nameof(AddWishCommand))]
+    public class AddWishCommandTests
     {
         private readonly MockCloudTable _table = new MockCloudTable();
 
         [Fact]
-        public async Task ExecuteAsync_Persists_A_New_Provider()
+        public async Task ExecuteAsync_Persists_A_New_Wish()
         {
-            var p = new Provider();
-            _table.SetupOperation(p, TableOperationType.Insert);
-            var cmd = new AddProviderCommand(p);
+            var w = new Wish();
+            var cmd = new AddWishCommand(w);
+            _table.SetupOperation(w, TableOperationType.Insert);
 
             await cmd.ExecuteAsync(_table.Object);
 
-            _table.VerifyOperation(p, TableOperationType.Insert);
+            _table.VerifyOperation(w, TableOperationType.Insert);
         }
     }
 }
