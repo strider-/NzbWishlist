@@ -22,7 +22,7 @@ namespace NzbWishlist.Core.Data
 
             if (_results.Any(r => r.RowKey == null))
             {
-                throw new ArgumentException("One or more wish results haven't been assigned to a wish!");
+                throw new ApplicationException("One or more wish results haven't been assigned to a wish!");
             }
 
             var currentBatch = _results.Take(100);

@@ -14,6 +14,16 @@ namespace NzbWishlist.Core.Models
 
     class Result
     {
+        public WishResult ToWishResult() => new WishResult
+        {
+            Title = Title,
+            PubDate = PubDate.UtcDateTime,
+            NzbUrl = Link,
+            Category = Category,
+            Size = Size,
+            DetailsUrl = DetailsUrl,
+        };
+
         public string Title { get; set; }
 
         public DateTimeOffset PubDate { get; set; }

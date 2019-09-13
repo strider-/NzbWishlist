@@ -29,15 +29,7 @@ namespace NzbWishlist.Core.Services
 
             foreach (var item in searchResults.Items)
             {
-                var result = new WishResult
-                {
-                    Title = item.Title,
-                    PubDate = item.PubDate.UtcDateTime,
-                    NzbUrl = item.Link,
-                    Category = item.Category,
-                    Size = item.Size,
-                    DetailsUrl = item.DetailsUrl,
-                };
+                var result = item.ToWishResult();
 
                 var possibleImageUrl = CreatePreviewUrl(provider, item.Guid);
                 var imgPrevReq = new HttpRequestMessage(HttpMethod.Head, possibleImageUrl);
@@ -58,7 +50,7 @@ namespace NzbWishlist.Core.Services
         private string CreatePreviewUrl(Provider provider, string guid)
         {
             var builder = new UriBuilder(provider.ApiUrl);
-            if(provider.ImageDomain != null)
+            if (provider.ImageDomain != null)
             {
                 builder.Host = provider.ImageDomain;
             }
