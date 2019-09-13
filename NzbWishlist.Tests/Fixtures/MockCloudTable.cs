@@ -1,6 +1,9 @@
 ﻿using Microsoft.WindowsAzure.Storage.Table;
 using Moq;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace NzbWishlist.Tests.Fixtures
 {
@@ -22,9 +25,55 @@ namespace NzbWishlist.Tests.Fixtures
                 });
         }
 
+        public void SetupOperationToFail(TableOperationType operation)
+        {
+            Setup(t => t.ExecuteAsync(It.Is<TableOperation>(op => op.OperationType == operation)))
+                .ReturnsAsync(new TableResult
+                {
+                    HttpStatusCode = 404,
+                    Result = null
+                });
+        }
+
         public void VerifyOperation(ITableEntity entity, TableOperationType operation)
         {
             Verify(t => t.ExecuteAsync(It.Is<TableOperation>(op => op.OperationType == operation && op.Entity.RowKey == entity.RowKey)), Times.Once());
+        }
+
+        public void VerifyFailedOperation(TableOperationType operation)
+        {
+            Verify(t => t.ExecuteAsync(It.Is<TableOperation>(op => op.OperationType == operation)), Times.Once());
+        }
+
+        public void SetupBatch()
+        {
+            Setup(t => t.ExecuteBatchAsync(It.IsAny<TableBatchOperation>())).ReturnsAsync(new List<TableResult>());
+        }
+
+        public void VerifyBatch()
+        {
+            Verify(t => t.ExecuteBatchAsync(It.IsAny<TableBatchOperation>()), Times.AtLeastOnce());
+        }
+
+        public void SetupSegmentedQuery<T>(IEnumerable<T> queryReturnValue) where T : ITableEntity, new()
+        {
+            var segment = CreateTableQuerySegment(queryReturnValue);
+
+            Setup(t => t.ExecuteQuerySegmentedAsync(It.IsAny<TableQuery<T>>(), It.IsAny<TableContinuationToken>())).ReturnsAsync(segment);
+        }
+
+        public void VerifySegmentedQuery<T>() where T : ITableEntity, new()
+        {
+            Verify(t => t.ExecuteQuerySegmentedAsync(It.IsAny<TableQuery<T>>(), It.IsAny<TableContinuationToken>()), Times.AtLeastOnce());
+        }
+
+        public TableQuerySegment<T> CreateTableQuerySegment<T>(IEnumerable<T> col)
+        {
+            var ctor = typeof(TableQuerySegment<T>)
+                .GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
+                .FirstOrDefault(c => c.GetParameters().Count() == 1);
+
+            return ctor.Invoke(new[] { col }) as TableQuerySegment<T>;
         }
     }
 }

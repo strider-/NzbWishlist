@@ -4,7 +4,6 @@ using NzbWishlist.Core.Data;
 using NzbWishlist.Core.Models;
 using NzbWishlist.Tests.Fixtures;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -43,7 +42,7 @@ namespace NzbWishlist.Tests.Data
         [Fact]
         public async Task ExecuteAsync_Persists_Results_In_Batches()
         {
-            _table.Setup(t => t.ExecuteBatchAsync(It.IsAny<TableBatchOperation>())).ReturnsAsync(new List<TableResult>());
+            _table.SetupBatch();
             var w = new Wish() { Name = "I Wish" };
             var wr = new WishResult();
             wr.BelongsTo(w);
@@ -52,7 +51,7 @@ namespace NzbWishlist.Tests.Data
 
             await cmd.ExecuteAsync(_table.Object);
 
-            _table.Verify(t => t.ExecuteBatchAsync(It.IsAny<TableBatchOperation>()), Times.AtLeastOnce());
+            _table.VerifyBatch();
         }
     }
 }

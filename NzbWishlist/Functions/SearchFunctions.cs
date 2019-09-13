@@ -27,13 +27,13 @@ namespace NzbWishlist.Azure.Functions
             [Table(Constants.WishTableName)] CloudTable wishTable,
             [OrchestrationClient] DurableOrchestrationClientBase client)
         {
-            var providers = await new GetProvidersQuery().ExecuteAsync(providerTable);
-            var wishes = await new GetWishesQuery().ExecuteAsync(wishTable);
+            var providers = await providerTable.ExecuteAsync(new GetProvidersQuery());
+            var wishes = await wishTable.ExecuteAsync(new GetWishesQuery());
 
             await client.StartNewAsync("SearchOrchestration", new SearchContext
             {
                 Providers = providers,
-                Wishes = wishes
+                Wishes = wishes.Where(w => w.Active)
             });
         }
 
@@ -51,7 +51,7 @@ namespace NzbWishlist.Azure.Functions
                 var providerResults = await context.CallSubOrchestratorAsync<IEnumerable<WishResult>>("ProviderOrchestration", new SearchProviderContext
                 {
                     Provider = provider,
-                    Wishes = model.Wishes.Where(w => w.Active)
+                    Wishes = model.Wishes
                 });
 
                 results.AddRange(providerResults);
