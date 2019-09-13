@@ -3,8 +3,7 @@ using System;
 
 namespace NzbWishlist.Core.Models
 {
-    public
-    class WishResult : TableEntity
+    public class WishResult : TableEntity
     {
         public WishResult()
         {
@@ -15,6 +14,7 @@ namespace NzbWishlist.Core.Models
         public void BelongsTo(Wish wish)
         {
             RowKey = $"{wish.RowKey}_{Id}";
+            WishName = wish.Name;
         }
 
         public string Id { get; set; }
@@ -32,5 +32,7 @@ namespace NzbWishlist.Core.Models
         public string NzbUrl { get; set; }
 
         public string Category { get; set; }
+
+        public string WishName { get; set; }
     }
 }

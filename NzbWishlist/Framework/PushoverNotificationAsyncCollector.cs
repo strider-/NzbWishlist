@@ -16,9 +16,9 @@ namespace NzbWishlist.Azure.Framework
 
         public PushoverNotificationAsyncCollector(PushoverAttribute attribute) => _attribute = attribute;
 
-        public async Task AddAsync(PushoverNotification item, CancellationToken cancellationToken = default)
+        public Task AddAsync(PushoverNotification item, CancellationToken cancellationToken = default)
         {
-            await SendNotification(item);
+            return SendNotification(item);
         }
 
         public Task FlushAsync(CancellationToken cancellationToken = default)

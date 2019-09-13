@@ -11,7 +11,7 @@ using NzbWishlist.Core.Services;
 
 namespace NzbWishlist.Azure
 {
-    public class Startup : FunctionsStartup
+    public class Startup : FunctionsStartup, IWebJobsStartup
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {

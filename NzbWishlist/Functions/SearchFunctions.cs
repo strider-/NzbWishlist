@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.WebJobs;
 using Microsoft.WindowsAzure.Storage.Table;
 using NzbWishlist.Azure.Extensions;
+using NzbWishlist.Azure.Framework;
 using NzbWishlist.Azure.Models;
 using NzbWishlist.Core.Data;
 using NzbWishlist.Core.Models;
@@ -39,7 +40,8 @@ namespace NzbWishlist.Azure.Functions
         [FunctionName("SearchOrchestration")]
         public async Task SearchOrchestrationAsync(
             [OrchestrationTrigger] DurableOrchestrationContextBase context,
-            [Table(Constants.WishTableName)] CloudTable wishTable)
+            [Table(Constants.WishTableName)] CloudTable wishTable,
+            [Pushover] IAsyncCollector<PushoverNotification> notifications)
         {
             var model = context.GetInput<SearchContext>();
             var results = new List<WishResult>();
@@ -55,12 +57,18 @@ namespace NzbWishlist.Azure.Functions
                 results.AddRange(providerResults);
             }
 
-            /* 
-             * TODO: Add pushover notification w/ unique wishes with new results
-             */
+            if (results.Any())
+            {
+                var addResultsCmd = new AddWishResultsCommand(results);
+                await wishTable.ExecuteAsync(addResultsCmd);
 
-            var addResultsCmd = new AddWishResultsCommand(results);
-            await wishTable.ExecuteAsync(addResultsCmd);
+                var wishNames = results.GroupBy(r => r.WishName).Distinct();
+                await notifications.AddAsync(new PushoverNotification
+                {
+                    Title = "NZB Wishlist",
+                    Message = $"Found new results for {string.Join(", ", wishNames)}"
+                });
+            }
 
             var updateWishesCmd = new UpdateLastSearchDateCommand(model.Wishes);
             await wishTable.ExecuteAsync(updateWishesCmd);

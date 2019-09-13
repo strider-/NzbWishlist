@@ -4,7 +4,6 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.WindowsAzure.Storage.Table;
 using NzbWishlist.Azure.Extensions;
-using NzbWishlist.Azure.Framework;
 using NzbWishlist.Azure.Models;
 using NzbWishlist.Azure.Validation;
 using NzbWishlist.Core.Data;
