@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NzbWishlist\NzbWishlist.Azure.csproj" />
+    <ProjectReference Include="..\NzbWishlist.Azure\NzbWishlist.Azure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29306.81
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NzbWishlist.Azure", "NzbWishlist\NzbWishlist.Azure.csproj", "{0F92A498-2E59-4F98-9EA4-58C0066F7CC9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NzbWishlist.Azure", "NzbWishlist.Azure\NzbWishlist.Azure.csproj", "{0F92A498-2E59-4F98-9EA4-58C0066F7CC9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NzbWishlist.Core", "NzbWishlist.Core\NzbWishlist.Core.csproj", "{70A4B15C-8FF3-4A65-8D98-13F6B9DD99C8}"
 EndProject
