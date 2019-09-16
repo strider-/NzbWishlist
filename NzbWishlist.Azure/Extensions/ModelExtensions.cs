@@ -28,7 +28,8 @@ namespace NzbWishlist.Azure.Extensions
         {
             ApiKey = provider.ApiKey,
             ApiUrl = provider.ApiUrl,
-            ImageDomain = provider.ImageDomain
+            ImageDomain = provider.ImageDomain,
+            Name = provider.Name
         };
 
         public static ProviderViewModel ToViewModel(this Provider provider) => new ProviderViewModel
@@ -36,7 +37,8 @@ namespace NzbWishlist.Azure.Extensions
             Id = provider.RowKey,
             ApiKey = provider.ApiKey,
             ApiUrl = provider.ApiUrl,
-            ImageDomain = provider.ImageDomain            
+            ImageDomain = provider.ImageDomain,
+            Name = provider.Name
         };
 
         public static Wish ToDomainModel(this WishViewModel wish) => new Wish

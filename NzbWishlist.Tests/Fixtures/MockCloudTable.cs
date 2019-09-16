@@ -9,9 +9,19 @@ namespace NzbWishlist.Tests.Fixtures
 {
     public class MockCloudTable : Mock<CloudTable>
     {
-        public MockCloudTable() : base(MockBehavior.Strict, new[] { new Uri("https://no.where/devstoreaccount1/") })
-        {
+        public MockCloudTable() 
+            : base(MockBehavior.Strict, new[] { new Uri("https://no.where/devstoreaccount1/") })
+        { }
 
+        public void SetupOperation<T>(TableOperationType operation, Func<T> creator) where T : ITableEntity, new()
+        {
+            Setup(t => t.ExecuteAsync(It.Is<TableOperation>(op => op.OperationType == operation)))
+                .ReturnsAsync(new TableResult
+                {
+                    Etag = "new!",
+                    HttpStatusCode = 200,
+                    Result = creator()
+                });
         }
 
         public void SetupOperation(ITableEntity entity, TableOperationType operation)
@@ -33,6 +43,11 @@ namespace NzbWishlist.Tests.Fixtures
                     HttpStatusCode = 404,
                     Result = null
                 });
+        }
+
+        public void VerifyOperation(TableOperationType operation)
+        {
+            Verify(t => t.ExecuteAsync(It.Is<TableOperation>(op => op.OperationType == operation)), Times.Once());
         }
 
         public void VerifyOperation(ITableEntity entity, TableOperationType operation)
