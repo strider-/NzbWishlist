@@ -11,5 +11,7 @@
         public const string ProviderTableName = "providers";
 
         public const string WishTableName = "wishes";
+
+        public const string WishSearchActivity = "WishSearch";
     }
 }
