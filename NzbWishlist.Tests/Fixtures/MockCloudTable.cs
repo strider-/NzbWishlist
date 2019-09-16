@@ -45,9 +45,16 @@ namespace NzbWishlist.Tests.Fixtures
                 });
         }
 
-        public void SetupOperationToThrow()
+        public void SetupOperationToThrow(TableOperationType? type = null)
         {
-            Setup(t => t.ExecuteAsync(It.IsAny<TableOperation>())).ThrowsAsync(new Exception("uh oh"));
+            if (type == null)
+            {
+                Setup(t => t.ExecuteAsync(It.IsAny<TableOperation>())).ThrowsAsync(new Exception("uh oh"));
+            }
+            else
+            {
+                Setup(t => t.ExecuteAsync(It.Is<TableOperation>(op => op.OperationType == type.Value))).ThrowsAsync(new Exception("uh oh"));
+            }
         }
 
         public void VerifyOperation(TableOperationType operation)
@@ -75,6 +82,11 @@ namespace NzbWishlist.Tests.Fixtures
             Verify(t => t.ExecuteBatchAsync(It.IsAny<TableBatchOperation>()), Times.AtLeastOnce());
         }
 
+        public void SetupSegmentedQueryToThrow()
+        {
+            Setup(t => t.ExecuteQuerySegmentedAsync(It.IsAny<TableQuery>(), It.IsAny<TableContinuationToken>())).ThrowsAsync(new Exception("uh oh"));
+        }
+
         public void SetupSegmentedQuery<T>(IEnumerable<T> queryReturnValue) where T : ITableEntity, new()
         {
             var segment = CreateTableQuerySegment(queryReturnValue);
@@ -93,7 +105,7 @@ namespace NzbWishlist.Tests.Fixtures
                 .GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
                 .FirstOrDefault(c => c.GetParameters().Count() == 1);
 
-            return ctor.Invoke(new[] { col }) as TableQuerySegment<T>;
+            return ctor.Invoke(new[] { col.ToList() }) as TableQuerySegment<T>;
         }
     }
 }
