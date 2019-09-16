@@ -6,10 +6,8 @@ using NzbWishlist.Azure.Models;
 using NzbWishlist.Core.Data;
 using NzbWishlist.Core.Models;
 using NzbWishlist.Core.Services;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NzbWishlist.Azure.Functions
@@ -92,8 +90,6 @@ namespace NzbWishlist.Azure.Functions
                     Wish = wish
                 });
                 results.AddRange(wishResults);
-
-                await context.CreateTimer(DateTime.UtcNow.AddSeconds(1), CancellationToken.None);
             }
 
             return results;

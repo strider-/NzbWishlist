@@ -13,7 +13,8 @@ namespace NzbWishlist.Core.Models
 
         public int DaysSinceLastSearch()
         {
-            return (int)Math.Ceiling(DateTime.UtcNow.Subtract(LastSearchDate).TotalDays);
+            var days = (int)Math.Ceiling(DateTime.UtcNow.Subtract(LastSearchDate).TotalDays);
+            return Math.Max(1, days);
         }
 
         public string Name { get; set; }

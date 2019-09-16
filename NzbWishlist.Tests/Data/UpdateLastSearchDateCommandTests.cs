@@ -1,8 +1,11 @@
-﻿using NzbWishlist.Core.Data;
+﻿using Microsoft.WindowsAzure.Storage.Table;
+using Moq;
+using NzbWishlist.Core.Data;
 using NzbWishlist.Core.Models;
 using NzbWishlist.Tests.Fixtures;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -28,6 +31,17 @@ namespace NzbWishlist.Tests.Data
 
             _table.VerifyBatch();
             Assert.All(wishes, w => Assert.NotEqual(w.LastSearchDate, DateTime.MinValue));
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_Does_Nothing_With_No_Wishes()
+        {
+            var wishes = Enumerable.Empty<Wish>();
+
+            var cmd = new UpdateLastSearchDateCommand(wishes);
+            await cmd.ExecuteAsync(_table.Object);
+
+            _table.Verify(t => t.ExecuteBatchAsync(It.IsAny<TableBatchOperation>()), Times.Never());
         }
     }
 }

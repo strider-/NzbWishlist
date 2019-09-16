@@ -9,15 +9,16 @@ namespace NzbWishlist.Core.Services
 {
     public class NewznabClient : INewznabClient
     {
-        private HttpClient _client;
+        private IHttpClientFactory _factory;
 
-        public NewznabClient() => _client = new HttpClient();
+        public NewznabClient(IHttpClientFactory factory) => _factory = factory;
 
         public async Task<IEnumerable<WishResult>> SearchAsync(Provider provider, Wish wish)
         {
+            var client = _factory.CreateClient(provider.Name);
             var searchUrl = $"{provider.ApiUrl.TrimEnd('/')}/api?apikey={provider.ApiKey}&o=json&t=search&q={wish.Query}&maxage={wish.DaysSinceLastSearch()}";
 
-            var resp = await _client.GetAsync(searchUrl);
+            var resp = await client.GetAsync(searchUrl);
 
             if (!resp.IsSuccessStatusCode)
             {
@@ -34,7 +35,7 @@ namespace NzbWishlist.Core.Services
                 var possibleImageUrl = CreatePreviewUrl(provider, item.Guid);
                 var imgPrevReq = new HttpRequestMessage(HttpMethod.Head, possibleImageUrl);
 
-                var imgResp = await _client.SendAsync(imgPrevReq);
+                var imgResp = await client.SendAsync(imgPrevReq);
                 if (imgResp.IsSuccessStatusCode)
                 {
                     result.PreviewUrl = possibleImageUrl;

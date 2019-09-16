@@ -19,6 +19,11 @@ namespace NzbWishlist.Core.Data
             var currentBatch = _wishes.Take(100);
             int counter = 1;
 
+            if (!_wishes.Any())
+            {
+                return; // Nothing to do!
+            }
+
             do
             {
                 var batch = new TableBatchOperation();
