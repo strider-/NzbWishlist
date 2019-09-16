@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
-using Moq;
 using NzbWishlist.Azure.Functions;
 using NzbWishlist.Azure.Models;
 using NzbWishlist.Core.Models;
 using NzbWishlist.Tests.Fixtures;
-using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -17,14 +16,14 @@ namespace NzbWishlist.Tests.Functions
     {
         private readonly MockCloudTable _table = new MockCloudTable();
         private readonly ProviderFunctions _function = new ProviderFunctions();
-        private readonly ILogger _log = Mock.Of<ILogger>();
+        private readonly MockLogger _log = new MockLogger();
 
         [Fact]
         public async Task AddProviderAsync_Returns_BadRequest_With_An_Invalid_Model()
         {
             var req = TestHelper.CreateHttpRequest(new { });
 
-            var resp = await _function.AddProviderAsync(req, _table.Object, _log);
+            var resp = await _function.AddProviderAsync(req, _table.Object, _log.Object);
 
             Assert.IsType<BadRequestObjectResult>(resp);
         }
@@ -38,10 +37,11 @@ namespace NzbWishlist.Tests.Functions
                 apiKey = "abc-123",
                 apiUrl = "https://no.where"
             });
-            _table.Setup(t => t.ExecuteAsync(It.IsAny<TableOperation>())).ThrowsAsync(new Exception("uh oh"));
+            _table.SetupOperationToThrow();
 
-            var resp = await _function.AddProviderAsync(req, _table.Object, _log);
+            var resp = await _function.AddProviderAsync(req, _table.Object, _log.Object);
 
+            _log.VerifyLoggedException("Add-Provider caused an exception");
             Assert.IsType<UnprocessableEntityObjectResult>(resp);
         }
 
@@ -64,7 +64,7 @@ namespace NzbWishlist.Tests.Functions
                 ImageDomain = reqModel.ImageDomain
             });
 
-            var resp = await _function.AddProviderAsync(req, _table.Object, _log);
+            var resp = await _function.AddProviderAsync(req, _table.Object, _log.Object);
 
             _table.VerifyOperation(TableOperationType.Insert);
             var cr = Assert.IsType<CreatedResult>(resp);
@@ -74,6 +74,63 @@ namespace NzbWishlist.Tests.Functions
             Assert.Equal(reqModel.ApiKey, model.ApiKey);
             Assert.Equal(reqModel.ApiUrl, model.ApiUrl);
             Assert.Equal(reqModel.ImageDomain, model.ImageDomain);
+        }
+
+        [Fact]
+        public async Task GetProvidersAsync_Returns_ServerError_When_An_Exception_Is_Thrown()
+        {
+            var req = TestHelper.CreateHttpRequest();
+            _table.SetupOperationToThrow();
+
+            var resp = await _function.GetProvidersAsync(req, _table.Object, _log.Object);
+
+            _log.VerifyLoggedException("Get-Providers caused an exception");
+            var objResult = Assert.IsType<ObjectResult>(resp);
+            Assert.Equal(500, objResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetProvidersAsync_Returns_Available_Providers()
+        {
+            var req = TestHelper.CreateHttpRequest();
+            _table.SetupSegmentedQuery(new[]
+            {
+                new Provider { Name = "Test", ApiKey = "key", ApiUrl = "url" },
+                new Provider { Name = "Test 2", ApiKey = "key", ApiUrl = "url" },
+            }.ToList());
+
+            var resp = await _function.GetProvidersAsync(req, _table.Object, _log.Object);
+
+            _table.VerifySegmentedQuery<Provider>();
+            var okResult = Assert.IsType<OkObjectResult>(resp);
+            var providers = Assert.IsAssignableFrom<IEnumerable<ProviderViewModel>>(okResult.Value);
+            Assert.Collection(providers,
+                p => Assert.Equal("Test", p.Name),
+                p => Assert.Equal("Test 2", p.Name));
+        }
+
+        [Fact]
+        public async Task DeleteProviderAsync_Returns_Unprocessable_When_An_Exception_Is_Thrown()
+        {
+            var req = TestHelper.CreateHttpRequest();
+            _table.SetupOperationToThrow();
+
+            var resp = await _function.DeleteProviderAsync(req, _table.Object, _log.Object, "123");
+
+            _log.VerifyLoggedException("Delete-Provider caused an exception");
+            Assert.IsType<UnprocessableEntityObjectResult>(resp);
+        }
+
+        [Fact]
+        public async Task DeleteProviderAsync_Returns_NoContent_When_Successful()
+        {
+            var req = TestHelper.CreateHttpRequest();
+            _table.SetupOperation<Provider>(TableOperationType.Delete);
+
+            var resp = await _function.DeleteProviderAsync(req, _table.Object, _log.Object, "123");
+
+            _table.VerifyOperation(TableOperationType.Delete);
+            Assert.IsType<NoContentResult>(resp);
         }
     }
 }
