@@ -8,6 +8,10 @@ namespace NzbWishlist.Azure.Validation
     {
         public ProviderValidator()
         {
+            RuleFor(p => p.Name)
+                .NotEmpty()
+                .WithMessage("Provider name cannot be blank.");
+
             RuleFor(p => p.ApiUrl)
                 .NotEmpty()
                 .WithMessage("API url cannot be blank.")
