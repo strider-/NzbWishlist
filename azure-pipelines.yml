@@ -34,6 +34,13 @@ stages:
         projects: '**/NzbWishlist.Azure.csproj'
         arguments: '--output publish_output --configuration Release'
 
+    - task: DotNetCoreCLI@2
+      displayName: Run Unit Tests
+      inputs:
+        command: test
+        projects: '**/NzbWishlist.Tests.csproj'
+        arguments: '--configuration $(buildConfiguration)'
+
     - task: ArchiveFiles@2
       displayName: 'Archive files'
       inputs:
