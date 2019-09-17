@@ -41,7 +41,6 @@ namespace NzbWishlist.Core.Services
                     result.PreviewUrl = possibleImageUrl;
                 }
 
-                result.BelongsTo(wish);
                 wishResults.Add(result);
             }
 

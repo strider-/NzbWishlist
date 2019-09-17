@@ -19,7 +19,14 @@ namespace NzbWishlist.Azure.Functions
         [FunctionName(Constants.WishSearchActivity)]
         public async Task<IEnumerable<WishResult>> WishSearchAsync([ActivityTrigger] SearchWishContext context)
         {
-            return await _client.SearchAsync(context.Provider, context.Wish);
+            var results = await _client.SearchAsync(context.Provider, context.Wish);
+
+            foreach(var result in results)
+            {
+                result.BelongsTo(context.Wish);
+            }
+
+            return results;
         }
     }
 }

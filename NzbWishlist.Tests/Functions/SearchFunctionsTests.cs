@@ -34,5 +34,26 @@ namespace NzbWishlist.Tests.Functions
 
             _client.Verify(c => c.SearchAsync(ctx.Provider, ctx.Wish), Times.Once());
         }
+
+        [Fact]
+        public async void WishSearchAsync_Associates_Wish_Results_To_Their_Wish()
+        {
+            var ctx = new SearchWishContext
+            {
+                Provider = new Provider(),
+                Wish = new Wish { Name = "A Wish" }
+            };
+            _client.Setup(c => c.SearchAsync(ctx.Provider, ctx.Wish))
+                   .ReturnsAsync(new[] { new WishResult { } });
+
+            var results = await _function.WishSearchAsync(ctx);
+
+            _client.Verify(c => c.SearchAsync(ctx.Provider, ctx.Wish), Times.Once());
+            Assert.All(results, r =>
+            {
+                Assert.Equal("A Wish", r.WishName);
+                Assert.NotNull(r.RowKey);
+            });
+        }
     }
 }
