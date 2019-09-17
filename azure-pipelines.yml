@@ -39,7 +39,6 @@ stages:
       inputs:
         command: test
         projects: '**/NzbWishlist.Tests.csproj'
-        arguments: '--configuration $(buildConfiguration)'
 
     - task: ArchiveFiles@2
       displayName: 'Archive files'

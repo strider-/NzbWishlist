@@ -15,7 +15,7 @@ using System.Runtime.CompilerServices;
 
 namespace NzbWishlist.Azure
 {
-    public class Startup : FunctionsStartup, IWebJobsStartup
+    public class Startup : FunctionsStartup
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {

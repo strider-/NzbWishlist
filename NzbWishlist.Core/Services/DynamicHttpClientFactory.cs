@@ -13,7 +13,11 @@ namespace NzbWishlist.Core.Services
 
         public HttpClient CreateClient(string name)
         {
-            var client = _clients.GetOrAdd(name, new HttpClient(new ThrottlingMessageHandler(1, TimeSpan.FromSeconds(1))));
+            var client = _clients.GetOrAdd(name, (_) =>
+            {
+                var handler = new ThrottlingMessageHandler(1, TimeSpan.FromMilliseconds(500));
+                return new HttpClient(handler);
+            });
 
             return client;
         }
@@ -26,7 +30,7 @@ namespace NzbWishlist.Core.Services
         public ThrottlingMessageHandler(int maxRequests, TimeSpan perInterval)
             : this(new TimeSpanSemaphore(maxRequests, perInterval)) { }
 
-        public ThrottlingMessageHandler(TimeSpanSemaphore timeSpanSemaphore) 
+        public ThrottlingMessageHandler(TimeSpanSemaphore timeSpanSemaphore)
             : base(new HttpClientHandler())
         {
             _timeSpanSemaphore = timeSpanSemaphore;

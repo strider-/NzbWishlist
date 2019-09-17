@@ -9,7 +9,7 @@ Newznab API aggregator: Add 'wishes' and get notifications when new results for 
 * .NET Core 2.0 (netstandard2.0)
 * FluentValidation
 * Azure Functions v2 (w/ Durable Functions framework)
-* Azure Storage v2
+* Azure Storage v2 (Tables)
 * xUnit
 * Moq
 
