@@ -8,8 +8,22 @@ namespace NzbWishlist.Core.Models
 {
     class SearchResults
     {
-        [JsonProperty("item")]
-        public IEnumerable<Result> Items { get; set; } = Enumerable.Empty<Result>();
+        [JsonExtensionData]
+        public IDictionary<string, JToken> Props { get; set; }
+
+        public IEnumerable<Result> GetItems()
+        {
+            if (Props.ContainsKey("channel"))
+            {
+                return Props["channel"]["item"].ToObject<IEnumerable<Result>>();
+            }
+            else if (Props.ContainsKey("item"))
+            {
+                return Props["item"].ToObject<IEnumerable<Result>>();
+            }
+
+            return Enumerable.Empty<Result>();
+        }
     }
 
     class Result

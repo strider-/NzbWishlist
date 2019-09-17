@@ -19,7 +19,7 @@ namespace NzbWishlist.Azure.Functions
 
         [FunctionName("SearchTrigger")]
         public async Task SearchAsync(
-            [TimerTrigger("0 0 */2 * * *")] TimerInfo timer,
+            [TimerTrigger("0 0 */2 * * *", RunOnStartup = true)] TimerInfo timer,
             [Table(Constants.ProviderTableName)] CloudTable providerTable,
             [Table(Constants.WishTableName)] CloudTable wishTable,
             [OrchestrationClient] DurableOrchestrationClientBase client)
@@ -63,7 +63,10 @@ namespace NzbWishlist.Azure.Functions
                 var addResultsCmd = new AddWishResultsCommand(results);
                 await wishTable.ExecuteAsync(addResultsCmd);
 
-                var wishNames = results.GroupBy(r => r.WishName).Distinct();
+                var wishNames = results.GroupBy(r => r.WishName)
+                                       .Select(r => r.Key)
+                                       .Distinct();
+                
                 await notifications.AddAsync(new PushoverNotification
                 {
                     Title = "NZB Wishlist",
