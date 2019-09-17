@@ -16,7 +16,6 @@ namespace NzbWishlist.Azure.Functions
         const string MainOrchestrator = "SearchOrchestration";
         const string SubOrchestrator = "ProviderOrchestration";
 
-
         [FunctionName("SearchTrigger")]
         public async Task SearchAsync(
             [TimerTrigger("0 0 */2 * * *", RunOnStartup = true)] TimerInfo timer,

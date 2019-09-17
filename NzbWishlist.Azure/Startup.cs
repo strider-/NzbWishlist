@@ -6,9 +6,12 @@ using NzbWishlist.Azure;
 using NzbWishlist.Azure.Framework;
 using NzbWishlist.Core.Services;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 [assembly: WebJobsStartup(typeof(WebJobsStartup))]
+[assembly: InternalsVisibleTo("NzbWishlist.Tests")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 namespace NzbWishlist.Azure
 {

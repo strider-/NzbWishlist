@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace NzbWishlist.Azure.Models
 {
-    class SearchProviderContext
+    internal class SearchProviderContext
     {
         public Provider Provider { get; set; }
 
