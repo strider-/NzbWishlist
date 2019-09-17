@@ -11,7 +11,7 @@ variables:
   azureSubscription: '8b6d097c-75ce-41f5-8d8f-647bf00b4590'
 
   # Function app name
-  functionAppName: ''
+  functionAppName: 'nzbwishlist'
 
   # Agent VM image name
   vmImageName: 'vs2017-win2016'
