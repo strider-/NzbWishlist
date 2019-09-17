@@ -28,7 +28,7 @@ namespace NzbWishlist.Core.Services
             var searchResults = await resp.Content.ReadAsAsync<SearchResults>();
             var wishResults = new List<WishResult>();
 
-            foreach (var item in searchResults.Items)
+            foreach (var item in searchResults.GetItems())
             {
                 var result = item.ToWishResult();
 
