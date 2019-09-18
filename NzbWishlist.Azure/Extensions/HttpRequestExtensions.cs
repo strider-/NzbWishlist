@@ -35,13 +35,13 @@ namespace NzbWishlist.Azure.Extensions
             return result.Errors.ToList();
         }
 
-        public static string CreateLocation(this HttpRequest request, string path)
+        public static string CreateLocation(this HttpRequest request, string path, bool includeQuery = false)
         {
             return new UriBuilder(
                 request.Scheme,
                 request.Host.Host,
                 request.Host.Port ?? (request.Scheme == "https" ? 443 : 80),
-                $"api/{path.TrimStart('/')}")
+                $"api/{path.TrimStart('/')}", includeQuery ? request.QueryString.ToString() : "")
             .ToString();
         }
     }
