@@ -50,6 +50,7 @@ namespace NzbWishlist.Tests
                 var uri = new Uri(url);
                 req.Setup(r => r.Scheme).Returns(uri.Scheme);
                 req.Setup(r => r.Host).Returns(new HostString(uri.Host, uri.Port));
+                req.Setup(r => r.QueryString).Returns(new QueryString());
             }
 
             return req;

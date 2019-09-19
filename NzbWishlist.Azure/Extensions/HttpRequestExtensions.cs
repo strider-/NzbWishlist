@@ -13,7 +13,7 @@ namespace NzbWishlist.Azure.Extensions
 {
     public static class HttpRequestExtensions
     {
-        public static async Task<Either<TModel, IList<ValidationFailure>>> GetRequestModel<TModel, TValidator>(this HttpRequest request)
+        public static async Task<Either<TModel, IList<ValidationFailure>>> GetRequestModelAsync<TModel, TValidator>(this HttpRequest request)
             where TModel : class
             where TValidator : AbstractValidator<TModel>, new()
         {
@@ -41,7 +41,8 @@ namespace NzbWishlist.Azure.Extensions
                 request.Scheme,
                 request.Host.Host,
                 request.Host.Port ?? (request.Scheme == "https" ? 443 : 80),
-                $"api/{path.TrimStart('/')}", includeQuery ? request.QueryString.ToString() : "")
+                $"api/{path.TrimStart('/')}", 
+                includeQuery ? request.QueryString.ToString() : "")
             .ToString();
         }
     }

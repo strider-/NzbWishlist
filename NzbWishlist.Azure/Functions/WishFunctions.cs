@@ -24,7 +24,7 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
-                var (model, errors) = await req.GetRequestModel<WishViewModel, WishValidator>();
+                var (model, errors) = await req.GetRequestModelAsync<WishViewModel, WishValidator>();
                 if (model == null)
                 {
                     return errors.ToBadRequest();
@@ -118,7 +118,7 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
-                var (model, errors) = await req.GetRequestModel<ToggleWishViewModel, ToggleWishValidator>();
+                var (model, errors) = await req.GetRequestModelAsync<ToggleWishViewModel, ToggleWishValidator>();
                 if (model == null)
                 {
                     return errors.ToBadRequest();

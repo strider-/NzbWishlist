@@ -24,7 +24,7 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
-                var (model, errors) = await req.GetRequestModel<ProviderViewModel, ProviderValidator>();
+                var (model, errors) = await req.GetRequestModelAsync<ProviderViewModel, ProviderValidator>();
                 if (model == null)
                 {
                     return errors.ToBadRequest();

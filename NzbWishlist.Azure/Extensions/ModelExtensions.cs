@@ -67,5 +67,32 @@ namespace NzbWishlist.Azure.Extensions
             Size = wishResult.Size,
             Title = wishResult.Title
         };
+
+        public static CartEntry ToCartEntry(this WishResult wishResult, Func<string, string> grabUrlGenerator)
+        {
+            var entry =  new CartEntry
+            {
+                Category = wishResult.Category,
+                Description = "",
+                DetailsUrl = wishResult.DetailsUrl,
+                PublishDate = wishResult.PubDate,
+                Title = wishResult.Title
+            };
+
+            entry.GrabUrl = grabUrlGenerator(entry.RowKey);
+
+            return entry;
+        }
+
+        public static CartEntryViewModel ToViewModel(this CartEntry entry) => new CartEntryViewModel
+        {
+            DetailsUrl = entry.DetailsUrl,
+            Category = entry.Category,
+            Description = entry.Description,
+            GrabUrl = entry.GrabUrl,
+            Id = entry.RowKey,
+            PublishDate = entry.PublishDate,
+            Title = entry.Title
+        };
     }
 }

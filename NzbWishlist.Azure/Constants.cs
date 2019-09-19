@@ -12,6 +12,8 @@
 
         public const string WishTableName = "wishes";
 
+        public const string CartTableName = "cart";
+
         public const string WishSearchActivity = "WishSearch";
     }
 }
