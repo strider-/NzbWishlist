@@ -7,18 +7,45 @@ using Microsoft.WindowsAzure.Storage.Table;
 using NzbWishlist.Azure.Extensions;
 using NzbWishlist.Core.Data;
 using System;
+using System.Linq;
+using System.ServiceModel.Syndication;
+using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace NzbWishlist.Azure.Functions
 {
     public class CartFunctions
     {
         [FunctionName("Cart-RSS")]
-        public IActionResult Rss(
+        public async Task<IActionResult> RssAsync(
             [HttpTrigger(AuthorizationLevel.Function, Constants.Get, Route = "cart/rss")] HttpRequest req,
             [Table(Constants.CartTableName)] CloudTable table)
         {
-            throw new NotImplementedException();
+            var location = new Uri(req.CreateLocation("/cart/rss", includeQuery: true));
+            var feed = new SyndicationFeed("NzbWishlist", "NzbWishlist Feed", location);
+            var sb = new StringBuilder();
+
+            var entries = await table.ExecuteAsync(new GetCartQuery());
+
+            feed.Links.Add(new SyndicationLink(location)
+            {
+                RelationshipType = "self",
+                MediaType = "application/rss+xml"
+            });
+            feed.Items = entries.Select(e => e.ToSyndicationItem());
+
+            using (var writer = XmlWriter.Create(sb))
+            {
+                feed.SaveAsRss20(writer);
+            }
+
+            return new ContentResult
+            {
+                Content = sb.ToString(),
+                ContentType = "text/xml",
+                StatusCode = 200
+            };
         }
 
         [FunctionName("Cart-Add")]
@@ -33,7 +60,7 @@ namespace NzbWishlist.Azure.Functions
             {
                 var wishResult = await wishTable.ExecuteAsync(new GetWishResultQuery(wishResultId));
 
-                var entry = wishResult.ToCartEntry(id => req.CreateLocation($"/cart/nzb/{id}", includeQuery: true));
+                var entry = wishResult.ToCartEntry(id => req.CreateLocation($"/cart/nzb/{id}"));
 
                 await cartTable.ExecuteAsync(new AddToCartCommand(entry));
 

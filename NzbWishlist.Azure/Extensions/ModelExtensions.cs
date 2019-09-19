@@ -5,6 +5,8 @@ using NzbWishlist.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ServiceModel.Syndication;
+using System.Xml.Linq;
 
 namespace NzbWishlist.Azure.Extensions
 {
@@ -70,7 +72,7 @@ namespace NzbWishlist.Azure.Extensions
 
         public static CartEntry ToCartEntry(this WishResult wishResult, Func<string, string> grabUrlGenerator)
         {
-            var entry =  new CartEntry
+            var entry = new CartEntry
             {
                 Category = wishResult.Category,
                 Description = "",
@@ -94,5 +96,23 @@ namespace NzbWishlist.Azure.Extensions
             PublishDate = entry.PublishDate,
             Title = entry.Title
         };
+
+        public static SyndicationItem ToSyndicationItem(this CartEntry entry)
+        {
+            var feedItem = new SyndicationItem(entry.Title, entry.Description, new Uri(entry.GrabUrl))
+            {
+                PublishDate = new DateTimeOffset(entry.PublishDate),
+                Id = entry.RowKey,
+            };
+
+            feedItem.AddPermalink(new Uri(entry.DetailsUrl));
+            feedItem.ElementExtensions.Add(new XElement("category", entry.Category));
+            feedItem.ElementExtensions.Add(new XElement("enclosure",
+                                               new XAttribute("url", entry.GrabUrl),
+                                               new XAttribute("length", "0"),
+                                               new XAttribute("type", "application/x+nzb")));
+
+            return feedItem;
+        }
     }
 }

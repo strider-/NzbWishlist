@@ -5,7 +5,9 @@ using NzbWishlist.Azure.Models;
 using NzbWishlist.Core.Models;
 using NzbWishlist.Tests.Fixtures;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Xunit;
 
 namespace NzbWishlist.Tests.Functions
@@ -16,6 +18,26 @@ namespace NzbWishlist.Tests.Functions
         private readonly MockCloudTable _cartTable = new MockCloudTable();
         private readonly CartFunctions _function = new CartFunctions();
         private readonly MockLogger _log = new MockLogger();
+
+        [Fact]
+        public async Task RssAsync_Returns_An_Rss_2_Point_0_Feed()
+        {
+            var req = TestHelper.CreateHttpRequest("https://nzb.mtighe.dev/api/cart/rss");
+            _cartTable.SetupSegmentedQuery(new[] {
+                new CartEntry { Category = "Cat", Description = "", DetailsUrl = "https://no.where/details/cat", GrabUrl = "https://no.where/nzb/cat", Title = "item 1" },
+                new CartEntry { Category = "Dog", Description = "", DetailsUrl = "https://no.where/details/dog", GrabUrl = "https://no.where/nzb/dog", Title = "item 2" },
+            });
+
+            var result = await _function.RssAsync(req, _cartTable.Object);
+
+            var cr = Assert.IsType<ContentResult>(result);
+            var doc = XDocument.Parse(cr.Content);
+            Assert.Equal(200, cr.StatusCode);
+            Assert.Equal("text/xml", cr.ContentType);
+            Assert.Equal("rss", doc.Root.Name.LocalName);
+            Assert.Equal("2.0", doc.Root.Attribute("version").Value);
+            Assert.Equal(2, doc.Root.Element("channel").Elements("item").Count());
+        }
 
         [Fact]
         public async Task AddToCartAsync_Returns_Unprocessable_When_Exceptions_Are_Thrown()
