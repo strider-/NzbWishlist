@@ -2,6 +2,8 @@
 
 Newznab API aggregator: Add 'wishes' and get notifications when new results for those wishes are found. Support for multiple newznab API providers.
 
+[![Build Status](https://dev.azure.com/strideriidx/NZB%20Wishlist/_apis/build/status/NZB%20Wishlist?branchName=master)](https://dev.azure.com/strideriidx/NZB%20Wishlist/_build/latest?definitionId=1&branchName=master)
+
 ----------
 
 ## Technology Stack
