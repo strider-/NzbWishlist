@@ -1,4 +1,5 @@
 ﻿using FluentValidation.Results;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NzbWishlist.Azure.Models;
 using NzbWishlist.Core.Models;
@@ -78,7 +79,8 @@ namespace NzbWishlist.Azure.Extensions
                 Description = "",
                 DetailsUrl = wishResult.DetailsUrl,
                 PublishDate = wishResult.PubDate,
-                Title = wishResult.Title
+                Title = wishResult.Title,
+                NzbUrl = wishResult.NzbUrl
             };
 
             entry.GrabUrl = grabUrlGenerator(entry.RowKey);
@@ -97,9 +99,13 @@ namespace NzbWishlist.Azure.Extensions
             Title = entry.Title
         };
 
-        public static SyndicationItem ToSyndicationItem(this CartEntry entry)
+        public static SyndicationItem ToSyndicationItem(this CartEntry entry, QueryString qs)
         {
-            var feedItem = new SyndicationItem(entry.Title, entry.Description, new Uri(entry.GrabUrl))
+            var builder = new UriBuilder(entry.GrabUrl);
+            builder.Query = qs.Value;
+            var grabUri = builder.Uri;
+
+            var feedItem = new SyndicationItem(entry.Title, entry.Description, grabUri)
             {
                 PublishDate = new DateTimeOffset(entry.PublishDate),
                 Id = entry.RowKey,
@@ -108,7 +114,7 @@ namespace NzbWishlist.Azure.Extensions
             feedItem.AddPermalink(new Uri(entry.DetailsUrl));
             feedItem.ElementExtensions.Add(new XElement("category", entry.Category));
             feedItem.ElementExtensions.Add(new XElement("enclosure",
-                                               new XAttribute("url", entry.GrabUrl),
+                                               new XAttribute("url", grabUri),
                                                new XAttribute("length", "0"),
                                                new XAttribute("type", "application/x+nzb")));
 

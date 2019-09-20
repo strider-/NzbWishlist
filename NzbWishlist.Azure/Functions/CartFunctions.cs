@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
 using NzbWishlist.Azure.Extensions;
 using NzbWishlist.Core.Data;
+using NzbWishlist.Core.Services;
 using System;
 using System.Linq;
 using System.ServiceModel.Syndication;
@@ -17,6 +18,10 @@ namespace NzbWishlist.Azure.Functions
 {
     public class CartFunctions
     {
+        private readonly INewznabClient _client;
+
+        public CartFunctions(INewznabClient client) => _client = client;
+
         [FunctionName("Cart-RSS")]
         public async Task<IActionResult> RssAsync(
             [HttpTrigger(AuthorizationLevel.Function, Constants.Get, Route = "cart/rss")] HttpRequest req,
@@ -33,7 +38,7 @@ namespace NzbWishlist.Azure.Functions
                 RelationshipType = "self",
                 MediaType = "application/rss+xml"
             });
-            feed.Items = entries.Select(e => e.ToSyndicationItem());
+            feed.Items = entries.Select(e => e.ToSyndicationItem(req.QueryString));
 
             using (var writer = XmlWriter.Create(sb))
             {
@@ -77,9 +82,35 @@ namespace NzbWishlist.Azure.Functions
         public async Task<IActionResult> GrabNzbFromCartAsync(
             [HttpTrigger(AuthorizationLevel.Function, Constants.Get, Route = "cart/nzb/{cartId}")] HttpRequest req,
             [Table(Constants.CartTableName)] CloudTable table,
+            ILogger log,
             string cartId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var entry = await table.ExecuteAsync(new GetCartEntryQuery(cartId));
+                if (entry == null)
+                {
+                    return new NotFoundResult();
+                }
+
+                var nzbStream = await _client.GetNzbStreamAsync(entry);
+                if (nzbStream == null)
+                {
+                    return new NotFoundResult();
+                }
+
+                if (req.Query.TryGetValue("del", out var val) && val == "1")
+                {
+                    await table.ExecuteAsync(new RemoveFromCartCommand(entry));
+                }
+
+                return new FileStreamResult(nzbStream, "application/x+nzb");
+            }
+            catch (Exception ex)
+            {
+                log.LogCritical(ex, "Cart-Grab caused an exception.");
+                return ex.ToServerError();
+            }
         }
     }
 }

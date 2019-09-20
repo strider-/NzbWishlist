@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Internal;
+using Microsoft.Extensions.Primitives;
 using Moq;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -48,9 +51,18 @@ namespace NzbWishlist.Tests
             if (url != null)
             {
                 var uri = new Uri(url);
+                var qs = uri.ParseQueryString();
+                var store = new Dictionary<string, StringValues>();
+
+                foreach (var k in qs.AllKeys)
+                {
+                    store[k] = qs[k];
+                }
+
                 req.Setup(r => r.Scheme).Returns(uri.Scheme);
                 req.Setup(r => r.Host).Returns(new HostString(uri.Host, uri.Port));
-                req.Setup(r => r.QueryString).Returns(new QueryString());
+                req.Setup(r => r.QueryString).Returns(new QueryString(uri.Query));
+                req.Setup(r => r.Query).Returns(new QueryCollection(store));
             }
 
             return req;

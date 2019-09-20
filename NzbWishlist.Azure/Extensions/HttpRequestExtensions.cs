@@ -42,7 +42,7 @@ namespace NzbWishlist.Azure.Extensions
                 request.Host.Host,
                 request.Host.Port ?? (request.Scheme == "https" ? 443 : 80),
                 $"api/{path.TrimStart('/')}", 
-                includeQuery ? request.QueryString.ToString() : "")
+                includeQuery ? request.QueryString.Value : "")
             .ToString();
         }
     }

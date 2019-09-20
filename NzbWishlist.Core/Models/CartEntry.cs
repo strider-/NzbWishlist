@@ -21,6 +21,8 @@ namespace NzbWishlist.Core.Models
         
         public string GrabUrl { get; set; }
 
+        public string NzbUrl { get; set; }
+
         public string Category { get; set; }
     }
 }
