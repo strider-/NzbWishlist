@@ -1,4 +1,5 @@
-﻿using NzbWishlist.Core.Models;
+﻿using Microsoft.Extensions.Primitives;
+using NzbWishlist.Core.Models;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -9,6 +10,6 @@ namespace NzbWishlist.Core.Services
     {
         Task<IEnumerable<WishResult>> SearchAsync(Provider provider, Wish wish);
 
-        Task<Stream> GetNzbStreamAsync(CartEntry entry);
+        Task<(Stream, IEnumerable<KeyValuePair<string, StringValues>>)> GetNzbStreamAsync(CartEntry entry);
     }
 }

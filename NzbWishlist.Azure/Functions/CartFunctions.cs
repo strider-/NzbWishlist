@@ -93,17 +93,21 @@ namespace NzbWishlist.Azure.Functions
                     return new NotFoundResult();
                 }
 
-                var nzbStream = await _client.GetNzbStreamAsync(entry);
+                var (nzbStream, nzbHeaders) = await _client.GetNzbStreamAsync(entry);
                 if (nzbStream == null)
                 {
                     return new NotFoundResult();
                 }
-
+                
                 if (req.Query.TryGetValue("del", out var val) && val == "1")
                 {
                     await table.ExecuteAsync(new RemoveFromCartCommand(entry));
                 }
 
+                foreach(var header in nzbHeaders)
+                {
+                    req.HttpContext.Response.Headers.Add(header);
+                }
                 return new FileStreamResult(nzbStream, "application/x+nzb");
             }
             catch (Exception ex)

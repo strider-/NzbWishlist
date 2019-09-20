@@ -1,4 +1,5 @@
-﻿using NzbWishlist.Core.Models;
+﻿using Microsoft.Extensions.Primitives;
+using NzbWishlist.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,17 +50,21 @@ namespace NzbWishlist.Core.Services
             return wishResults;
         }
 
-        public async Task<Stream> GetNzbStreamAsync(CartEntry entry)
+        public async Task<(Stream, IEnumerable<KeyValuePair<string, StringValues>>)> GetNzbStreamAsync(CartEntry entry)
         {
             var client = GetHttpClient(entry.NzbUrl);
 
             var resp = await client.GetAsync(entry.NzbUrl);
             if (!resp.IsSuccessStatusCode)
             {
-                return null;
+                return (null, null);
             }
 
-            return await resp.Content.ReadAsStreamAsync();
+            var nzbHeaders = resp.Headers
+                .Where(h => h.Key.StartsWith("X-", StringComparison.InvariantCultureIgnoreCase))
+                .Select(kvp => new KeyValuePair<string, StringValues>(kvp.Key, new StringValues(kvp.Value.ToArray())));
+
+            return (await resp.Content.ReadAsStreamAsync(), nzbHeaders);
         }
 
         private string CreatePreviewUrl(Provider provider, string guid)

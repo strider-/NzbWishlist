@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using Microsoft.WindowsAzure.Storage.Table;
 using Moq;
 using NzbWishlist.Azure.Functions;
@@ -7,6 +8,7 @@ using NzbWishlist.Core.Models;
 using NzbWishlist.Core.Services;
 using NzbWishlist.Tests.Fixtures;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -116,7 +118,7 @@ namespace NzbWishlist.Tests.Functions
             var req = TestHelper.CreateHttpRequest("https://nzb.mtighe.dev/api/cart/nzb/123");
             var entry = new CartEntry();
             _cartTable.SetupOperation(TableOperationType.Retrieve, () => entry);
-            _client.Setup(c => c.GetNzbStreamAsync(entry)).ReturnsAsync((Stream)null);
+            _client.Setup(c => c.GetNzbStreamAsync(entry)).ReturnsAsync((null, null));
 
             var result = await _function.GrabNzbFromCartAsync(req, _cartTable.Object, _log.Object, "123");
 
@@ -125,18 +127,29 @@ namespace NzbWishlist.Tests.Functions
         }
 
         [Fact]
-        public async Task GrabNzbFromCartAsync_Returns_An_Nzb_File_Stream_Result()
+        public async Task GrabNzbFromCartAsync_Returns_An_Nzb_File_Stream_Result_With_Forwarded_Experimental_Headers()
         {
             var req = TestHelper.CreateHttpRequest("https://nzb.mtighe.dev/api/cart/nzb/123");
             var entry = new CartEntry();
             _cartTable.SetupOperation(TableOperationType.Retrieve, () => entry);
-            _client.Setup(c => c.GetNzbStreamAsync(entry)).ReturnsAsync(new MemoryStream());
+            _client.Setup(c => c.GetNzbStreamAsync(entry)).ReturnsAsync(
+                (
+                    new MemoryStream(),
+                    new[]
+                    {
+                        new KeyValuePair<string, StringValues>("x-dnzb-site", "sitename"),
+                        new KeyValuePair<string, StringValues>("x-dnzb-category", "misc > other")
+                    }
+                ));
 
             var result = await _function.GrabNzbFromCartAsync(req, _cartTable.Object, _log.Object, "123");
 
             _cartTable.VerifyOperation(TableOperationType.Retrieve);
             var fileResult = Assert.IsType<FileStreamResult>(result);
             Assert.Equal("application/x+nzb", fileResult.ContentType);
+            var respHeaders = req.HttpContext.Response.Headers;
+            Assert.Equal("sitename", respHeaders["x-dnzb-site"]);
+            Assert.Equal("misc > other", respHeaders["x-dnzb-category"]);
         }
 
         [Fact]
@@ -146,7 +159,7 @@ namespace NzbWishlist.Tests.Functions
             var entry = new CartEntry { ETag = "*" };
             _cartTable.SetupOperation(TableOperationType.Retrieve, () => entry);
             _cartTable.SetupOperation(entry, TableOperationType.Delete);
-            _client.Setup(c => c.GetNzbStreamAsync(entry)).ReturnsAsync(new MemoryStream());
+            _client.Setup(c => c.GetNzbStreamAsync(entry)).ReturnsAsync((new MemoryStream(), Enumerable.Empty<KeyValuePair<string, StringValues>>()));
 
             var result = await _function.GrabNzbFromCartAsync(req, _cartTable.Object, _log.Object, "123");
 

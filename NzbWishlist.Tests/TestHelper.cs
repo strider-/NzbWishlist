@@ -42,8 +42,10 @@ namespace NzbWishlist.Tests
         {
             var req = new Mock<HttpRequest>(MockBehavior.Strict);
             var ctx = new Mock<HttpContext>(MockBehavior.Strict);
+            var resp = new Mock<HttpResponse>(MockBehavior.Strict);
 
-            ctx.Setup(c => c.Response).Returns(Mock.Of<HttpResponse>());
+            resp.Setup(r => r.Headers).Returns(new HeaderDictionary());
+            ctx.Setup(c => c.Response).Returns(resp.Object);
 
             req.Setup(r => r.Method).Returns(method.ToString());
             req.Setup(r => r.HttpContext).Returns(ctx.Object);

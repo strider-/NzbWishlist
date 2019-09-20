@@ -19,15 +19,25 @@ namespace NzbWishlist.Tests.Fixtures
             CallBase = true;
         }
 
-        public MockHttpMessageHandler SetupAnyRequestToReturn(HttpStatusCode statusCode, object obj = null, Action<HttpRequestMessage> requestInspector = null)
+        public MockHttpMessageHandler SetupAnyRequestToReturn(HttpStatusCode statusCode, object obj = null, Action<HttpRequestMessage> requestInspector = null, IDictionary<string, string> headers = null)
         {
+            var resp = new HttpResponseMessage
+            {
+                StatusCode = statusCode,
+                Content = obj == null ? null : new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8, "application/json"),
+            };
+
+            if (headers != null)
+            {
+                foreach (var (k, v) in headers)
+                {
+                    resp.Headers.Add(k, v);
+                }
+            }
+
             Setup(h => h.Send(It.IsAny<HttpRequestMessage>()))
                 .Callback(requestInspector ?? (m => { }))
-                .Returns(new HttpResponseMessage
-                {
-                    StatusCode = statusCode,
-                    Content = obj == null ? null : new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8, "application/json")
-                });
+                .Returns(resp);
 
             return this;
         }

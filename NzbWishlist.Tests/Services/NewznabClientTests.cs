@@ -5,6 +5,7 @@ using NzbWishlist.Core.Services;
 using NzbWishlist.Tests.Fixtures;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -131,6 +132,38 @@ namespace NzbWishlist.Tests.Services
             var wr = Assert.Single(results);
             Assert.NotNull(wr.PreviewUrl);
             Assert.Contains(imgDomain == null ? "no.where" : imgDomain, wr.PreviewUrl);
+        }
+
+        [Fact]
+        public async Task GetNzbStreamAsync_Returns_Null_When_Nzb_Is_Not_Found()
+        {
+            _handler.SetupAnyRequestToReturn(HttpStatusCode.NotFound);
+
+            var (stream, headers) = await _client.GetNzbStreamAsync(new CartEntry { NzbUrl = "https://no.where" });
+
+            Assert.Null(stream);
+            Assert.Null(headers);
+        }
+
+        [Fact]
+        public async Task GetNzbStreamAsync_Returns_Nzb_With_Experimental_Headers()
+        {
+            _handler.SetupAnyRequestToReturn(HttpStatusCode.OK, new { }, headers: new Dictionary<string, string>
+            {
+                { "contentType", "application/x+nzb" },
+                { "x-dnzb-site", "mysite" },
+                { "x-dnzb-link", "https://mysite/details/123" },
+                { "x-dnzb-category", "TV > HD" },
+            });
+
+            var (stream, headers) = await _client.GetNzbStreamAsync(new CartEntry { NzbUrl = "https://no.where" });
+
+            Assert.NotNull(stream);
+            Assert.NotNull(headers);
+            Assert.DoesNotContain(headers, kvp => kvp.Key == "contentType");
+            Assert.Contains(headers, kvp => kvp.Key == "x-dnzb-site" && kvp.Value == "mysite");
+            Assert.Contains(headers, kvp => kvp.Key == "x-dnzb-link" && kvp.Value == "https://mysite/details/123");
+            Assert.Contains(headers, kvp => kvp.Key == "x-dnzb-category" && kvp.Value == "TV > HD");
         }
 
         private Provider Provider() => new Provider
