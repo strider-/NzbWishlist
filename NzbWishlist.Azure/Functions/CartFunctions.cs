@@ -24,7 +24,7 @@ namespace NzbWishlist.Azure.Functions
 
         [FunctionName("Cart-RSS")]
         public async Task<IActionResult> RssAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Get, Route = "cart/rss")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Get, Route = "cart/rss")] HttpRequest req,
             [Table(Constants.CartTableName)] CloudTable table)
         {
             var location = new Uri(req.CreateLocation("/cart/rss", includeQuery: true));
@@ -55,7 +55,7 @@ namespace NzbWishlist.Azure.Functions
 
         [FunctionName("Cart-Add")]
         public async Task<IActionResult> AddToCartAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Post, Route = "cart/add/{wishResultId}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Post, Route = "cart/add/{wishResultId}")] HttpRequest req,
             [Table(Constants.WishTableName)] CloudTable wishTable,
             [Table(Constants.CartTableName)] CloudTable cartTable,
             ILogger log,
@@ -80,7 +80,7 @@ namespace NzbWishlist.Azure.Functions
 
         [FunctionName("Cart-Grab")]
         public async Task<IActionResult> GrabNzbFromCartAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Get, Route = "cart/nzb/{cartId}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Get, Route = "cart/nzb/{cartId}")] HttpRequest req,
             [Table(Constants.CartTableName)] CloudTable table,
             ILogger log,
             string cartId)

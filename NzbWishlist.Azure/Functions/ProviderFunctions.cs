@@ -18,7 +18,7 @@ namespace NzbWishlist.Azure.Functions
     {
         [FunctionName("Add-Provider")]
         public async Task<IActionResult> AddProviderAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Post, Route = "provider")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Post, Route = "provider")] HttpRequest req,
             [Table(Constants.ProviderTableName)] CloudTable table,
             ILogger log)
         {
@@ -47,7 +47,7 @@ namespace NzbWishlist.Azure.Functions
 
         [FunctionName("Get-Providers")]
         public async Task<IActionResult> GetProvidersAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Get, Route = "providers")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Get, Route = "providers")] HttpRequest req,
             [Table(Constants.ProviderTableName)] CloudTable table,
             ILogger log)
         {
@@ -68,7 +68,7 @@ namespace NzbWishlist.Azure.Functions
 
         [FunctionName("Delete-Provider")]
         public async Task<IActionResult> DeleteProviderAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Delete, Route = "providers/{id}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Delete, Route = "providers/{id}")] HttpRequest req,
             [Table(Constants.ProviderTableName)] CloudTable table,
             ILogger log,
             string id)

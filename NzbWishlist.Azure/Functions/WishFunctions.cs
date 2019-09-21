@@ -18,7 +18,7 @@ namespace NzbWishlist.Azure.Functions
     {
         [FunctionName("Add-Wish")]
         public async Task<IActionResult> AddWishAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Post, Route = "wish")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Post, Route = "wish")] HttpRequest req,
             [Table(Constants.WishTableName)] CloudTable table,
             ILogger log)
         {
@@ -47,7 +47,7 @@ namespace NzbWishlist.Azure.Functions
 
         [FunctionName("Get-Wishes")]
         public async Task<IActionResult> GetWishesAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Get, Route = "wishes")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Get, Route = "wishes")] HttpRequest req,
             [Table(Constants.WishTableName)] CloudTable table,
             ILogger log)
         {
@@ -68,7 +68,7 @@ namespace NzbWishlist.Azure.Functions
 
         [FunctionName("Get-WishResults")]
         public async Task<IActionResult> GetWishResultsAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Get, Route = "wishes/{id}/results")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Get, Route = "wishes/{id}/results")] HttpRequest req,
             [Table(Constants.WishTableName)] CloudTable table,
             ILogger log,
             string id)
@@ -90,7 +90,7 @@ namespace NzbWishlist.Azure.Functions
 
         [FunctionName("Delete-Wish")]
         public async Task<IActionResult> DeleteWishAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Delete, Route = "wishes/{id}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Delete, Route = "wishes/{id}")] HttpRequest req,
             [Table(Constants.WishTableName)] CloudTable table,
             ILogger log,
             string id)
@@ -112,7 +112,7 @@ namespace NzbWishlist.Azure.Functions
 
         [FunctionName("Toggle-Wish")]
         public async Task<IActionResult> ToggleWishAsync(
-            [HttpTrigger(AuthorizationLevel.Function, Constants.Post, Route = "wishes/toggle")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Post, Route = "wishes/toggle")] HttpRequest req,
             [Table(Constants.WishTableName)] CloudTable table,
             ILogger log)
         {
