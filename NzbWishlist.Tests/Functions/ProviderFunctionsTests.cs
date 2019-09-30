@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.WindowsAzure.Storage.Table;
+using Moq;
 using NzbWishlist.Azure.Functions;
 using NzbWishlist.Azure.Models;
+using NzbWishlist.Azure.Services;
 using NzbWishlist.Core.Models;
 using NzbWishlist.Tests.Fixtures;
 using System.Collections.Generic;
@@ -15,13 +17,31 @@ namespace NzbWishlist.Tests.Functions
     public class ProviderFunctionsTests
     {
         private readonly MockCloudTable _table = new MockCloudTable();
-        private readonly ProviderFunctions _function = new ProviderFunctions();
+        private readonly ProviderFunctions _function;
+        private readonly Mock<IAuthService> _authService = new Mock<IAuthService>(MockBehavior.Strict);
         private readonly MockLogger _log = new MockLogger();
+
+        public ProviderFunctionsTests()
+        {
+            _function = new ProviderFunctions(_authService.Object);
+        }
+
+        [Fact]
+        public async Task AddProviderAsync_Requires_Authentication()
+        {
+            var req = TestHelper.CreateHttpRequest(new { });
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(false);
+
+            var resp = await _function.AddProviderAsync(req, _table.Object, _log.Object);
+
+            Assert.IsType<UnauthorizedResult>(resp);
+        }
 
         [Fact]
         public async Task AddProviderAsync_Returns_BadRequest_With_An_Invalid_Model()
         {
             var req = TestHelper.CreateHttpRequest(new { });
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
 
             var resp = await _function.AddProviderAsync(req, _table.Object, _log.Object);
 
@@ -38,6 +58,7 @@ namespace NzbWishlist.Tests.Functions
                 apiUrl = "https://no.where"
             });
             _table.SetupOperationToThrow();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
 
             var resp = await _function.AddProviderAsync(req, _table.Object, _log.Object);
 
@@ -63,6 +84,7 @@ namespace NzbWishlist.Tests.Functions
                 ApiUrl = reqModel.ApiUrl,
                 ImageDomain = reqModel.ImageDomain
             });
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
 
             var resp = await _function.AddProviderAsync(req, _table.Object, _log.Object);
 
@@ -77,9 +99,21 @@ namespace NzbWishlist.Tests.Functions
         }
 
         [Fact]
+        public async Task GetProvidersAsync_Requires_Authentication()
+        {
+            var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(false);
+
+            var resp = await _function.GetProvidersAsync(req, _table.Object, _log.Object);
+
+            Assert.IsType<UnauthorizedResult>(resp);
+        }
+
+        [Fact]
         public async Task GetProvidersAsync_Returns_ServerError_When_An_Exception_Is_Thrown()
         {
             var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _table.SetupOperationToThrow();
 
             var resp = await _function.GetProvidersAsync(req, _table.Object, _log.Object);
@@ -93,6 +127,7 @@ namespace NzbWishlist.Tests.Functions
         public async Task GetProvidersAsync_Returns_Available_Providers()
         {
             var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _table.SetupSegmentedQuery(new[]
             {
                 new Provider { Name = "Test", ApiKey = "key", ApiUrl = "url" },
@@ -110,9 +145,21 @@ namespace NzbWishlist.Tests.Functions
         }
 
         [Fact]
+        public async Task DeleteProviderAsync_Requires_Authentication()
+        {
+            var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(false);
+
+            var resp = await _function.DeleteProviderAsync(req, _table.Object, _log.Object, "123");
+
+            Assert.IsType<UnauthorizedResult>(resp);
+        }
+
+        [Fact]
         public async Task DeleteProviderAsync_Returns_Unprocessable_When_An_Exception_Is_Thrown()
         {
             var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _table.SetupOperationToThrow();
 
             var resp = await _function.DeleteProviderAsync(req, _table.Object, _log.Object, "123");
@@ -125,6 +172,7 @@ namespace NzbWishlist.Tests.Functions
         public async Task DeleteProviderAsync_Returns_NoContent_When_Successful()
         {
             var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _table.SetupOperation<Provider>(TableOperationType.Delete);
 
             var resp = await _function.DeleteProviderAsync(req, _table.Object, _log.Object, "123");

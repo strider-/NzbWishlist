@@ -4,6 +4,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 using Moq;
 using NzbWishlist.Azure.Functions;
 using NzbWishlist.Azure.Models;
+using NzbWishlist.Azure.Services;
 using NzbWishlist.Core.Models;
 using NzbWishlist.Core.Services;
 using NzbWishlist.Tests.Fixtures;
@@ -23,11 +24,12 @@ namespace NzbWishlist.Tests.Functions
         private readonly MockCloudTable _cartTable = new MockCloudTable();
         private readonly MockLogger _log = new MockLogger();
         private readonly Mock<INewznabClient> _client = new Mock<INewznabClient>(MockBehavior.Strict);
+        private readonly Mock<IAuthService> _authService = new Mock<IAuthService>(MockBehavior.Strict);
         private readonly CartFunctions _function;
 
         public CartFunctionsTests()
         {
-            _function = new CartFunctions(_client.Object);
+            _function = new CartFunctions(_client.Object, _authService.Object);
         }
 
         [Fact]
@@ -57,9 +59,21 @@ namespace NzbWishlist.Tests.Functions
         }
 
         [Fact]
+        public async Task AddToCartAsync_Requires_Authentication()
+        {
+            var req = TestHelper.CreateHttpRequest("https://nzb.mtighe.dev/api/cart/add/123");
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(false);
+
+            var result = await _function.AddToCartAsync(req, new MockCloudTable().Object, _cartTable.Object, _log.Object, "123");
+
+            Assert.IsType<UnauthorizedResult>(result);
+        }
+
+        [Fact]
         public async Task AddToCartAsync_Returns_Unprocessable_When_Exceptions_Are_Thrown()
         {
             var req = TestHelper.CreateHttpRequest("https://nzb.mtighe.dev/api/cart/add/123");
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             var wishTable = new MockCloudTable();
             wishTable.SetupOperationToThrow();
 
@@ -85,6 +99,7 @@ namespace NzbWishlist.Tests.Functions
             };
             wishTable.SetupOperation(TableOperationType.Retrieve, () => wishResult);
             _cartTable.SetupOperation<CartEntry>(TableOperationType.Insert);
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
 
             var result = await _function.AddToCartAsync(req, wishTable.Object, _cartTable.Object, _log.Object, id);
 
@@ -106,6 +121,7 @@ namespace NzbWishlist.Tests.Functions
         {
             var req = TestHelper.CreateHttpRequest("https://nzb.mtighe.dev/api/cart/nzb/123");
             _cartTable.SetupOperationToFail(TableOperationType.Retrieve);
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
 
             var result = await _function.GrabNzbFromCartAsync(req, _cartTable.Object, _log.Object, "123");
 
@@ -118,6 +134,7 @@ namespace NzbWishlist.Tests.Functions
             var req = TestHelper.CreateHttpRequest("https://nzb.mtighe.dev/api/cart/nzb/123");
             var entry = new CartEntry();
             _cartTable.SetupOperation(TableOperationType.Retrieve, () => entry);
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _client.Setup(c => c.GetNzbStreamAsync(entry)).ReturnsAsync((null, null));
 
             var result = await _function.GrabNzbFromCartAsync(req, _cartTable.Object, _log.Object, "123");
@@ -129,12 +146,14 @@ namespace NzbWishlist.Tests.Functions
         [Fact]
         public async Task GrabNzbFromCartAsync_Returns_An_Nzb_File_Stream_Result_With_Forwarded_Experimental_Headers()
         {
+            var ms = new MemoryStream();
             var req = TestHelper.CreateHttpRequest("https://nzb.mtighe.dev/api/cart/nzb/123");
             var entry = new CartEntry();
             _cartTable.SetupOperation(TableOperationType.Retrieve, () => entry);
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _client.Setup(c => c.GetNzbStreamAsync(entry)).ReturnsAsync(
                 (
-                    new MemoryStream(),
+                    ms,
                     new[]
                     {
                         new KeyValuePair<string, StringValues>("x-dnzb-site", "sitename"),
@@ -150,27 +169,32 @@ namespace NzbWishlist.Tests.Functions
             var respHeaders = req.HttpContext.Response.Headers;
             Assert.Equal("sitename", respHeaders["x-dnzb-site"]);
             Assert.Equal("misc > other", respHeaders["x-dnzb-category"]);
+            ms.Dispose();
         }
 
         [Fact]
         public async Task GrabNzbFromCartAsync_Respects_The_QueryString()
         {
+            var ms = new MemoryStream();
             var req = TestHelper.CreateHttpRequest("https://nzb.mtighe.dev/api/cart/nzb/123?del=1");
             var entry = new CartEntry { ETag = "*" };
             _cartTable.SetupOperation(TableOperationType.Retrieve, () => entry);
             _cartTable.SetupOperation(entry, TableOperationType.Delete);
-            _client.Setup(c => c.GetNzbStreamAsync(entry)).ReturnsAsync((new MemoryStream(), Enumerable.Empty<KeyValuePair<string, StringValues>>()));
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
+            _client.Setup(c => c.GetNzbStreamAsync(entry)).ReturnsAsync((ms, Enumerable.Empty<KeyValuePair<string, StringValues>>()));
 
             var result = await _function.GrabNzbFromCartAsync(req, _cartTable.Object, _log.Object, "123");
 
             _cartTable.VerifyOperation(TableOperationType.Retrieve);
             _cartTable.VerifyOperation(TableOperationType.Delete);
+            ms.Dispose();
         }
 
         [Fact]
         public async Task GrabNzbFromCartAsync_Returns_ServerError_When_An_Exception_Is_Thrown()
         {
             var req = TestHelper.CreateHttpRequest("https://nzb.mtighe.dev/api/cart/nzb/123");
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _cartTable.SetupOperationToThrow();
 
             var result = await _function.GrabNzbFromCartAsync(req, _cartTable.Object, _log.Object, "123");
