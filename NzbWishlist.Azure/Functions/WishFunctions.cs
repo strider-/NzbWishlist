@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
 using NzbWishlist.Azure.Extensions;
 using NzbWishlist.Azure.Models;
+using NzbWishlist.Azure.Services;
 using NzbWishlist.Azure.Validation;
 using NzbWishlist.Core.Data;
 using System;
@@ -16,6 +17,10 @@ namespace NzbWishlist.Azure.Functions
 {
     public class WishFunctions
     {
+        private readonly IAuthService _authService;
+
+        public WishFunctions(IAuthService authService) => _authService = authService;
+
         [FunctionName("Add-Wish")]
         public async Task<IActionResult> AddWishAsync(
             [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Post, Route = "wish")] HttpRequest req,
@@ -24,6 +29,11 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
+                if (!await _authService.IsAuthenticated(req))
+                {
+                    return new UnauthorizedResult();
+                }
+
                 var (model, errors) = await req.GetRequestModelAsync<WishViewModel, WishValidator>();
                 if (model == null)
                 {
@@ -53,6 +63,11 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
+                if (!await _authService.IsAuthenticated(req))
+                {
+                    return new UnauthorizedResult();
+                }
+
                 var query = new GetWishesQuery();
 
                 var wishes = await table.ExecuteAsync(query);
@@ -75,6 +90,11 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
+                if (!await _authService.IsAuthenticated(req))
+                {
+                    return new UnauthorizedResult();
+                }
+
                 var query = new GetWishResultsQuery(id);
 
                 var results = await table.ExecuteAsync(query);
@@ -97,6 +117,11 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
+                if (!await _authService.IsAuthenticated(req))
+                {
+                    return new UnauthorizedResult();
+                }
+
                 var command = new DeleteWishCommand(id);
 
                 await table.ExecuteAsync(command);
@@ -118,6 +143,11 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
+                if (!await _authService.IsAuthenticated(req))
+                {
+                    return new UnauthorizedResult();
+                }
+
                 var (model, errors) = await req.GetRequestModelAsync<ToggleWishViewModel, ToggleWishValidator>();
                 if (model == null)
                 {

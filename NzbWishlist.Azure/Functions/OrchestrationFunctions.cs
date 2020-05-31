@@ -1,10 +1,12 @@
-﻿using Microsoft.Azure.WebJobs;
+﻿using DurableTask.Core;
+using Microsoft.Azure.WebJobs;
 using Microsoft.WindowsAzure.Storage.Table;
 using NzbWishlist.Azure.Extensions;
 using NzbWishlist.Azure.Framework;
 using NzbWishlist.Azure.Models;
 using NzbWishlist.Core.Data;
 using NzbWishlist.Core.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -94,6 +96,23 @@ namespace NzbWishlist.Azure.Functions
             }
 
             return results;
+        }
+
+        [FunctionName("PurgeSearchHistory")]
+        public async Task PurgeSearchHistoryAsync(
+            [TimerTrigger("0 0 0 * * *")] TimerInfo timer,
+            [OrchestrationClient] DurableOrchestrationClientBase client)
+        {
+            // delete all non-running batch calls older than a week at midnight UTC every day
+            await client.PurgeInstanceHistoryAsync(
+                DateTime.MinValue,
+                DateTime.UtcNow.AddDays(-7),
+                new OrchestrationStatus[] {
+                    OrchestrationStatus.Completed,
+                    OrchestrationStatus.Canceled,
+                    OrchestrationStatus.Failed,
+                    OrchestrationStatus.Terminated
+            });
         }
     }
 }

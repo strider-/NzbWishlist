@@ -4,6 +4,7 @@ using Microsoft.Azure.WebJobs.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using NzbWishlist.Azure;
 using NzbWishlist.Azure.Framework;
+using NzbWishlist.Azure.Services;
 using NzbWishlist.Core.Services;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
@@ -20,7 +21,8 @@ namespace NzbWishlist.Azure
         public override void Configure(IFunctionsHostBuilder builder)
         {
             builder.Services.AddScoped<INewznabClient, NewznabClient>()
-                            .AddSingleton<IHttpClientFactory, DynamicHttpClientFactory>();
+                            .AddSingleton<IHttpClientFactory, DynamicHttpClientFactory>()
+                            .AddSingleton<IAuthService, JwtAuthService>();
         }
     }
 

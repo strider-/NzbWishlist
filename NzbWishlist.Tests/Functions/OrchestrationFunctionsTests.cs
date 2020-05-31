@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.WebJobs;
+﻿using DurableTask.Core;
+using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Timers;
 using Microsoft.WindowsAzure.Storage.Table;
 using Moq;
@@ -187,6 +188,19 @@ namespace NzbWishlist.Tests.Functions
             context.Verify(c => c.GetInput<SearchProviderContext>(), Times.Once());
             context.Verify(c => c.CallActivityAsync<IEnumerable<WishResult>>("WishSearch", It.IsAny<object>()), Times.Exactly(2));
             Assert.Equal(3, result.Count());
+        }
+
+        [Fact]
+        public async Task PurgeSearchHistoryAsync_Purges_Batch_History()
+        {
+            var client = new Mock<DurableOrchestrationClientBase>();
+            var timer = new TimerInfo(new DailySchedule(), new ScheduleStatus(), false);
+            client.Setup(c => c.PurgeInstanceHistoryAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<IEnumerable<OrchestrationStatus>>()))
+                .ReturnsAsync(new PurgeHistoryResult(1));
+
+            await _function.PurgeSearchHistoryAsync(timer, client.Object);
+
+            client.Verify(c => c.PurgeInstanceHistoryAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<IEnumerable<OrchestrationStatus>>()), Times.Once());
         }
     }
 }

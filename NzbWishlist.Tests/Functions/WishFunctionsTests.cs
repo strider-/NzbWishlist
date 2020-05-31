@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.WindowsAzure.Storage.Table;
+using Moq;
 using NzbWishlist.Azure.Functions;
 using NzbWishlist.Azure.Models;
+using NzbWishlist.Azure.Services;
 using NzbWishlist.Core.Models;
 using NzbWishlist.Tests.Fixtures;
 using System.Collections.Generic;
@@ -15,14 +17,31 @@ namespace NzbWishlist.Tests.Functions
     public class WishFunctionsTests
     {
         private readonly MockCloudTable _table = new MockCloudTable();
-        private readonly WishFunctions _function = new WishFunctions();
+        private readonly WishFunctions _function;
+        private readonly Mock<IAuthService> _authService = new Mock<IAuthService>(MockBehavior.Strict);
         private readonly MockLogger _log = new MockLogger();
 
+        public WishFunctionsTests()
+        {
+            _function = new WishFunctions(_authService.Object);
+        }
+
+        [Fact]
+        public async Task AddWishAsync_Requires_Authentication()
+        {
+            var req = TestHelper.CreateHttpRequest(new { });
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(false);
+
+            var resp = await _function.AddWishAsync(req, _table.Object, _log.Object);
+
+            Assert.IsType<UnauthorizedResult>(resp);
+        }
 
         [Fact]
         public async Task AddWishAsync_Returns_BadRequest_When_An_Invalid_Model()
         {
             var req = TestHelper.CreateHttpRequest(new { });
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
 
             var resp = await _function.AddWishAsync(req, _table.Object, _log.Object);
 
@@ -38,6 +57,7 @@ namespace NzbWishlist.Tests.Functions
                 query = "new.wish"
             });
             _table.SetupOperationToThrow();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
 
             var resp = await _function.AddWishAsync(req, _table.Object, _log.Object);
 
@@ -55,6 +75,7 @@ namespace NzbWishlist.Tests.Functions
                 Active = false
             };
             var req = TestHelper.CreateHttpRequest(reqModel);
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _table.SetupOperation(TableOperationType.Insert, () => new Wish
             {
                 Name = reqModel.Name,
@@ -74,9 +95,21 @@ namespace NzbWishlist.Tests.Functions
         }
 
         [Fact]
+        public async Task GetWishesAsync_Requires_Authentication()
+        {
+            var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(false);
+
+            var resp = await _function.GetWishesAsync(req, _table.Object, _log.Object);
+
+            Assert.IsType<UnauthorizedResult>(resp);
+        }
+
+        [Fact]
         public async Task GetWishesAsync_Returns_ServerError_When_An_Exception_Is_Thrown()
         {
             var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _table.SetupOperationToThrow();
 
             var resp = await _function.GetWishesAsync(req, _table.Object, _log.Object);
@@ -90,6 +123,7 @@ namespace NzbWishlist.Tests.Functions
         public async Task GetWishesAsync_Returns_All_Available_Wishes()
         {
             var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _table.SetupSegmentedQuery(new[]
             {
                 new Wish { Name = "Test", Query = "test", Active = true },
@@ -107,9 +141,21 @@ namespace NzbWishlist.Tests.Functions
         }
 
         [Fact]
+        public async Task DeleteWishAsync_Requires_Authentication()
+        {
+            var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(false);
+
+            var resp = await _function.DeleteWishAsync(req, _table.Object, _log.Object, "123");
+
+            Assert.IsType<UnauthorizedResult>(resp);
+        }
+
+        [Fact]
         public async Task DeleteWishAsync_Returns_Unprocessable_When_An_Exception_Is_Thrown()
         {
             var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _table.SetupSegmentedQueryToThrow();
 
             var resp = await _function.DeleteWishAsync(req, _table.Object, _log.Object, "123");
@@ -124,6 +170,7 @@ namespace NzbWishlist.Tests.Functions
             var req = TestHelper.CreateHttpRequest();
             _table.SetupSegmentedQuery(Enumerable.Empty<DynamicTableEntity>());
             _table.SetupOperation<Wish>(TableOperationType.Delete);
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
 
             var resp = await _function.DeleteWishAsync(req, _table.Object, _log.Object, "123");
 
@@ -132,9 +179,21 @@ namespace NzbWishlist.Tests.Functions
         }
 
         [Fact]
+        public async Task ToggleWishAsync_Requires_Authentication()
+        {
+            var req = TestHelper.CreateHttpRequest();
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(false);
+
+            var resp = await _function.ToggleWishAsync(req, _table.Object, _log.Object);
+
+            Assert.IsType<UnauthorizedResult>(resp);
+        }
+
+        [Fact]
         public async Task ToggleWishAsync_Returns_BadRequest_With_An_Invalid_Model()
         {
             var req = TestHelper.CreateHttpRequest(new { });
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
 
             var resp = await _function.ToggleWishAsync(req, _table.Object, _log.Object);
 
@@ -150,6 +209,7 @@ namespace NzbWishlist.Tests.Functions
                 wishId = id,
                 active = false
             });
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _table.SetupOperation(TableOperationType.Retrieve, () => new DynamicTableEntity
             {
                 Properties = new Dictionary<string, EntityProperty>() {
@@ -176,6 +236,7 @@ namespace NzbWishlist.Tests.Functions
                 wishId = id,
                 active = false
             });
+            _authService.Setup(s => s.IsAuthenticated(req)).ReturnsAsync(true);
             _table.SetupOperation(TableOperationType.Retrieve, () => new DynamicTableEntity
             {
                 Properties = new Dictionary<string, EntityProperty>() {

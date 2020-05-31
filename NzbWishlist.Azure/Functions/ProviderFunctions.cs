@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
 using NzbWishlist.Azure.Extensions;
 using NzbWishlist.Azure.Models;
+using NzbWishlist.Azure.Services;
 using NzbWishlist.Azure.Validation;
 using NzbWishlist.Core.Data;
 using System;
@@ -16,6 +17,10 @@ namespace NzbWishlist.Azure.Functions
 {
     public class ProviderFunctions
     {
+        private readonly IAuthService _authService;
+
+        public ProviderFunctions(IAuthService authService) => _authService = authService;
+
         [FunctionName("Add-Provider")]
         public async Task<IActionResult> AddProviderAsync(
             [HttpTrigger(AuthorizationLevel.Anonymous, Constants.Post, Route = "provider")] HttpRequest req,
@@ -24,6 +29,11 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
+                if (!await _authService.IsAuthenticated(req))
+                {
+                    return new UnauthorizedResult();
+                }
+
                 var (model, errors) = await req.GetRequestModelAsync<ProviderViewModel, ProviderValidator>();
                 if (model == null)
                 {
@@ -53,6 +63,11 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
+                if (!await _authService.IsAuthenticated(req))
+                {
+                    return new UnauthorizedResult();
+                }
+
                 var query = new GetProvidersQuery();
 
                 var providers = await table.ExecuteAsync(query);
@@ -75,6 +90,11 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
+                if (!await _authService.IsAuthenticated(req))
+                {
+                    return new UnauthorizedResult();
+                }
+
                 var command = new DeleteProviderCommand(id);
 
                 await table.ExecuteAsync(command);

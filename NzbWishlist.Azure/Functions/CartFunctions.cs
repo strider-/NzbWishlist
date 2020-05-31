@@ -5,6 +5,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
 using NzbWishlist.Azure.Extensions;
+using NzbWishlist.Azure.Services;
 using NzbWishlist.Core.Data;
 using NzbWishlist.Core.Services;
 using System;
@@ -19,8 +20,13 @@ namespace NzbWishlist.Azure.Functions
     public class CartFunctions
     {
         private readonly INewznabClient _client;
+        private readonly IAuthService _authService;
 
-        public CartFunctions(INewznabClient client) => _client = client;
+        public CartFunctions(INewznabClient client, IAuthService authService)
+        {
+            _client = client;
+            _authService = authService;
+        }
 
         [FunctionName("Cart-RSS")]
         public async Task<IActionResult> RssAsync(
@@ -63,6 +69,11 @@ namespace NzbWishlist.Azure.Functions
         {
             try
             {
+                if (!await _authService.IsAuthenticated(req))
+                {
+                    return new UnauthorizedResult();
+                }
+
                 var wishResult = await wishTable.ExecuteAsync(new GetWishResultQuery(wishResultId));
 
                 var entry = wishResult.ToCartEntry(id => req.CreateLocation($"/cart/nzb/{id}"));
