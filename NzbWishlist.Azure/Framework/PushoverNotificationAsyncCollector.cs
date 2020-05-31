@@ -18,7 +18,7 @@ namespace NzbWishlist.Azure.Framework
 
         public Task AddAsync(PushoverNotification item, CancellationToken cancellationToken = default)
         {
-            return SendNotification(item, cancellationToken);
+            return SendNotificationAsync(item, cancellationToken);
         }
 
         public Task FlushAsync(CancellationToken cancellationToken = default)
@@ -26,7 +26,7 @@ namespace NzbWishlist.Azure.Framework
             return Task.CompletedTask;
         }
 
-        private async Task SendNotification(PushoverNotification item, CancellationToken cancellationToken)
+        private async Task SendNotificationAsync(PushoverNotification item, CancellationToken cancellationToken)
         {
             var dict = new Dictionary<string, string>
             {
